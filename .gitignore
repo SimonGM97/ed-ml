@@ -1,0 +1,21 @@
+# Virtual Environment
+.venv/
+
+# IDE and editor specific files
+.vscode/
+.idea/
+
+# System-specific files
+.DS_Store/
+
+# Test
+.pytest_cache/
+
+# Keys
+.data_lake/keys.json
+
+# Data
+data_lake/
+
+# mlruns
+mlruns/
