@@ -1,0 +1,14 @@
+aliases: []
+creation_timestamp: 1702504345536
+current_stage: Staging
+description: ''
+last_updated_timestamp: 1702504345543
+name: VTwrOPTmIk_lightgbm_model
+run_id: 2d76f1642c574efbaff5fb8afb2ed5a9
+run_link: ''
+source: file:///Users/simongarciamorillo/Library/CloudStorage/OneDrive-Personal/Documents/EdMachina/challenge/mlruns/176063670909512656/2d76f1642c574efbaff5fb8afb2ed5a9/artifacts/VTwrOPTmIk_lightgbm_model
+status: READY
+status_message: null
+storage_location: file:///Users/simongarciamorillo/Library/CloudStorage/OneDrive-Personal/Documents/EdMachina/challenge/mlruns/176063670909512656/2d76f1642c574efbaff5fb8afb2ed5a9/artifacts/VTwrOPTmIk_lightgbm_model
+user_id: null
+version: 1

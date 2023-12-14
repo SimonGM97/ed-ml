@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-
-from ed_ml.utils.load_raw_data import load_raw_data
+from ed_ml.utils.load_data import load_raw_data
 from ed_ml.data_processing.data_cleaning import DataCleaner
 from ed_ml.data_processing.feature_engineering import FeatureEngineer
 from ed_ml.utils.add_parser_arguments import add_parser_arguments
@@ -26,10 +25,20 @@ def main(
     # Clean Raw Data
     DC = DataCleaner(df=raw_df.copy())
     clean_df = DC.cleaner_pipeline(save=save)
+
+    # clean_df.loc[
+    #     (clean_df['user_uuid'] == '13df535e-065c-4593-98ea-5b1e29015b7d') &
+    #     (clean_df['course_uuid'] == '09614210-fce2-48bc-93e3-bc4bd441fe00')
+    # ].to_excel('clean_df_test.xlsx')
     
     # Prepare ML Datasets
     FE = FeatureEngineer(df=clean_df.copy())
     ml_df = FE.data_enricher_pipeline(save=save)
+
+    # ml_df.loc[
+    #     (ml_df['user_uuid'] == '13df535e-065c-4593-98ea-5b1e29015b7d') &
+    #     (ml_df['course_uuid'] == '09614210-fce2-48bc-93e3-bc4bd441fe00')
+    # ].to_excel('ml_df_test.xlsx')
 
     print(f'Finished data_processing.main.\n\n')
 

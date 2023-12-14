@@ -1,0 +1,15 @@
+artifact_uri: file:///Users/simongarciamorillo/Library/CloudStorage/OneDrive-Personal/Documents/EdMachina/challenge/mlruns/176063670909512656/afcf2fdb4ee24f969df2beac790c5bfc/artifacts
+end_time: 1702504346895
+entry_point_name: ''
+experiment_id: '176063670909512656'
+lifecycle_stage: active
+run_id: afcf2fdb4ee24f969df2beac790c5bfc
+run_name: luxuriant-hare-582
+run_uuid: afcf2fdb4ee24f969df2beac790c5bfc
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1702501723165
+status: 3
+tags: []
+user_id: simongarciamorillo

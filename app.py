@@ -14,7 +14,7 @@ if __name__ == '__main__':
     row00, row01, row02 = st.columns([3, 3, 3])
 
     # Show Ed Machina Logo
-    row01.image(Image.open(os.path.join("docs", "logo_no_background.png")), use_column_width=True)
+    row01.image(Image.open(os.path.join("docs", "images", "logo_no_background.png")), use_column_width=True)
     
     # Blank space
     st.write("#")

@@ -14,7 +14,6 @@ class Params:
     cleaned_data_path: str
     ml_data_path: str
 
-    ignore_features: List[str]
     datetime_columns: List[str]
 
     # Modeling
@@ -52,14 +51,13 @@ class Params:
         cls.raw_data_path = os.path.join(*config.get("DataProcessing", "raw_data_path").split(', '))
         cls.cleaned_data_path = os.path.join(*config.get("DataProcessing", "cleaned_data_path").split(', '))
         cls.ml_data_path = os.path.join(*config.get("DataProcessing", "ml_data_path").split(', '))
-
-        cls.ignore_features = config.get("DataProcessing", "ignore_features").split(', ')
+        
+        cls.target_column = config.get("DataProcessing", "target_column")
         cls.datetime_columns = config.get("DataProcessing", "datetime_columns").split(', ')
 
         # Access parameters from Modelling
         cls.model_attr_path = os.path.join(*config.get("Modeling", "model_attr_path").split(', '))
 
-        cls.target_column = config.get("Modeling", "target_column")
         cls.algorithms = config.get("Modeling", "algorithms").split(', ')
         cls.eval_metric = config.get("Modeling", "eval_metric")
         cls.val_splits = int(config.get("Modeling", "val_splits"))
@@ -98,6 +96,19 @@ class Params:
         # Access parameters from Inference
         cls.request_url = config.get("Inference", "request_url")
         cls.inference_path = os.path.join(*config.get("Inference", "inference_path").split(', '))
+
+        cls.course_name = config.get("Inference", "request_url")
+        cls.user_uuids = config.get("Inference", "user_uuids").split(', ')
+        cls.course_uuids = config.get("Inference", "course_uuids").split(', ')
+        cls.particion = config.get("Inference", "particion")
+        if cls.particion != 'None':
+            cls.particion = int(cls.particion)
+
+        pick_random = config.get("Inference", "pick_random")
+        if pick_random == 'True':
+            cls.pick_random = True
+        else:
+            cls.pick_random = False
 
         # Access parameters from Default
         cls.raw_df = config.get("Default", "raw_df")

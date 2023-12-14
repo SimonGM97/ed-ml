@@ -54,7 +54,7 @@ def main(
     print(tuner.model_registry)
 
 
-# .venv/bin/python scripts/model_tuning/model_tuning.py --max_evals 10
+# .venv/bin/python scripts/model_tuning/model_tuning.py --max_evals 20
 if __name__ == '__main__':
     # Define parser
     parser = argparse.ArgumentParser(description='Model tuning script.')

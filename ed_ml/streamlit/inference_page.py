@@ -1,32 +1,25 @@
 from config.params import Params
+from ed_ml.data_processing.data_cleaning import DataCleaner
 import plotly.graph_objects as go
 import streamlit as st
 import pandas as pd
 import numpy as np
 import requests
-import os
 import warnings
 
 warnings.filterwarnings("ignore")
 
 
 @st.cache_data
-def load_raw_df():
-    def correct_date(date):
-        day, year = date.split('-')
-        day = ('0' + day)[-2:]
-        return day + '-' + year
-    
-    # Load csv file
+def load_raw_data():
+    # Load raw data    
     df = pd.read_csv(Params.raw_data_path, sep=';')
 
-    # Correct periodo
-    df['periodo'] = df['periodo'].replace({
-        date: correct_date(date) for date in df['periodo'].unique()
-    })
+    # Instanciate DataCleaner
+    DC = DataCleaner()
 
-    # Fill particion
-    df['particion'].fillna(0, inplace=True)
+    # Correct periodo
+    df = DC.correct_periodo(df=df)
 
     return df
 
@@ -72,8 +65,12 @@ def run_new_prediction(raw_df: pd.DataFrame):
     predictions_df.index.name = 'user_uuid'
 
     # Prepare additional information
+    DC = DataCleaner(df=raw_df)
+
+    cleaned_df = DC.cleaner_pipeline()
+
     append_df = (
-        raw_df
+        cleaned_df
         .groupby('user_uuid')
         .agg({
             'legajo': first,
@@ -126,7 +123,8 @@ def find_donut_chart(predictions_df: pd.DataFrame):
     ))
 
     fig.update_layout(
-        margin=dict(l=0, r=0, t=30, b=0),
+        title=f'Total Students: {predictions_df.shape[0]}',
+        margin=dict(l=0, r=0, t=80, b=0),
         showlegend=False,
         height=220,
         width=220
@@ -200,8 +198,8 @@ def find_options(df: pd.DataFrame, col_name: str):
 
 
 def build_inference_page():
-    # Load raw dataset from cache
-    raw_df = load_raw_df()
+    # Load cleaned dataset from cache
+    raw_df = load_raw_data()
 
     # Define second row
     row10, row11, row12, row13, row14 = st.columns([3, 3, 1, 3, 1])
@@ -253,17 +251,17 @@ def build_inference_page():
     raw_df = filter_df(df=raw_df, course_name=course_name, periodo=periodo)
 
     # Select Users
-    toggle = st.toggle('Select specific users', value=False)
+    toggle = st.toggle('Select specific students', value=False)
     if toggle:
-        users = st.multiselect(
-            label='selected_users', 
+        legajos = st.multiselect(
+            label='selected_legajos', 
             options=raw_df['legajo'].unique().tolist(), 
             default=None, 
             label_visibility='collapsed'
         )
         
         # Filter raw_df, based on selected users
-        raw_df = raw_df.loc[raw_df['legajo'].isin(users)]
+        raw_df = raw_df.loc[raw_df['legajo'].isin(legajos)]
     
     # Select particion
     toggle = st.toggle('Select specific partition', value=False)

@@ -20,8 +20,16 @@ ARGS = {
         'timeout_mins',
         'loss_threshold',
         'min_performance'
+    ],
+    'inference.py': [
+        'course_name',
+        'user_uuids',
+        'course_uuids',
+        'particion',
+        'pick_random'
     ]
 }
+
 
 def parse_type(value: str):
     # None

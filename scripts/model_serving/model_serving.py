@@ -47,7 +47,8 @@ if __name__ == '__main__':
     champion = ml_registry.prod_model
 
     # Define Pipeline
-    ml_pipeline = MLPipeline()    
+    ml_pipeline = MLPipeline()
 
     # Run app
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    port = Params.request_url.split('/')[-2].split(':')[-1]
+    app.run(host='0.0.0.0', port=port, debug=True)

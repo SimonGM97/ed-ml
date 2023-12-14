@@ -6,7 +6,7 @@
 .idea/
 
 # System-specific files
-.DS_Store/
+.DS_Store
 
 # Test
 .pytest_cache/
@@ -16,6 +16,3 @@
 
 # Data
 data_lake/
-
-# mlruns
-mlruns/

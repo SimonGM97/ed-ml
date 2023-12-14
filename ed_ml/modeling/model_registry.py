@@ -304,6 +304,17 @@ class ModelRegistry:
                     print(f"Deleting {delete_path}.")
                     os.remove(delete_path)
 
+        # Clean artifacts
+        keep_run_ids = [m.run_id for m in models]
+
+        for root, directories, files in os.walk(Params.artifacts_path):
+            for file in files:
+                artifact_run_id = file.split('_')[0]
+                if artifact_run_id not in keep_run_ids:
+                    delete_path = os.path.join(Params.artifacts_path, file)
+                    print(f"Deleting {delete_path}.")
+                    os.remove(delete_path)
+
         # Clean mlruns
         keep_run_ids = [m.run_id for m in models]
 

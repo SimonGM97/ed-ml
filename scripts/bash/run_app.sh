@@ -1,7 +1,6 @@
 #!/bin/bash
-# export DOCKERHUB_TOKEN=dckr_pat_7yTPWD938TSdkt3CA04IpW5wLXw
-# chmod +x ./scripts/_bash/run_app.sh
-# ./scripts/_bash/run_app.sh
+# chmod +x ./scripts/bash/run_app.sh
+# ./scripts/bash/run_app.sh
 
 # Set repository variables
 REPOSITORY_NAME=ed-ml-docker
@@ -28,6 +27,7 @@ docker pull $USERNAME/$REPOSITORY_NAME:model_serving_$VERSION
 docker pull $USERNAME/$REPOSITORY_NAME:app_$VERSION
 
 # Run model_serving_container from model_serving_image
+# -p 5000:5000 \
 (
     docker run \
     --name model_serving_container_$VERSION \

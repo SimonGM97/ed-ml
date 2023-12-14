@@ -1,27 +1,120 @@
 Metadata-Version: 2.1
 Name: ed-ml
-Version: 0.1.0
+Version: 1.0.0
 Author: Simón P. García Morillo
 License-File: LICENCE.txt
-Requires-Dist: setuptools==69.0.2
-Requires-Dist: pandas==2.1.3
-Requires-Dist: numpy==1.26.2
-Requires-Dist: scikit-learn==1.3.2
-Requires-Dist: shap==0.43.0
-Requires-Dist: lightgbm==4.1.0
-Requires-Dist: xgboost==2.0.2
-Requires-Dist: mlflow==2.8.1
-Requires-Dist: hyperopt==0.2.7
-Requires-Dist: imbalanced-learn==0.11.0
-Requires-Dist: flask==3.0.0
-Requires-Dist: pytest==7.4.3
-Requires-Dist: streamlit==1.29.0
 
-TODO:
-    - Build a few tests
-    - Create basic streamlit web app
-    - Create docker images (add docker image for model)
-    - Add docstrings using copilot
-    - Create diagrams
-    - migrate to git repo
-    - Complete README.md
+<h1 align="center">
+<img src="./docs/images/logo.png" width="450">
+</h1><br>
+
+# ED-ML
+
+The **ed-ml** repository was created to develop the **ed_ml package** that will be leveraged to run the end-to-end Machine Learning challenge presented by EdMachina.
+
+The **ed-ml** package can be used to:
+- Run **data processing** jobs
+- Run **model tuning** jobs
+- Manage a ML model **repository**
+- **Serve** models than can be consumed through an endpoint
+- Run new **inferences** programatically
+- Interact with the solution through a **web-app**
+
+
+## Table of Contents
+----------------------
+
+- [Installation](#Installation)
+- [Usage](#Usage)
+- [Workflows](#Workflows)
+- [Processes](#Processes)
+- [API reference](#APIreference)
+- [Testing](#Testing)
+- [License](#License)
+- [Author](#Author)
+
+
+## Installation
+----------------------
+    
+1. Create python virtual environment:
+```
+python3 -m venv .venv
+```
+2. Install ed_ml module in "editable" mode:
+```
+pip install -e .
+```
+3. Install & run the [Docker Desktop](https://docs.docker.com/engine/install/) application.
+4. Set the `DOCKERHUB_TOKEN` environment variable to pull images from the `ed-ml-docker` dockerhub repository:
+```bash
+export VARIABLE_NAME=token
+
+```
+
+
+## Usage
+----------------------
+
+#### Quick Start
+
+The most straight-forward way to interact with the solution is through the **Streamlit web-app**. To do so, run the following commands:
+```
+chmod +x ./scripts/bash/image_building.sh
+```
+```
+./scripts/bash/image_building.sh
+```
+
+This will run the `run_app.sh` bash script, which will:
+- Log in to the `ed-ml-docker` dockerhub repository
+- pull the `model_serving_v1.0.0` & `app_v1.0.0` docker images
+
+Finally, open the web-app through the url: [http://localhost:8501](http://localhost:8501)
+
+`TODO`:
+- [x] Add docstrings using copilot
+- [ ] Create diagrams
+- [ ] add docker image for model
+- [ ] Complete README.md
+
+
+`Code and Syntax Highlightinh`
+
+```python
+s = 'arreloco'
+print(s)
+```
+
+> blockquote
+
+Markdown | Less | Pretty
+--- | --- | ---
+*Still* | `renders` | **nicely**
+1 | 2 | 3
+
+~~The world is flat.~~
+
+```
+{
+  "firstName": "John",
+  "lastName": "Smith",
+  "age": 25
+}
+```
+
+Here's a sentence with a footnote. [^1]
+
+[^1]: This is the footnote.
+
+term
+: definition
+
+- [x] Write the press release
+- [ ] Update the website
+- [ ] Contact the media
+
+<dl>
+  <dt>Definition list</dt>
+  <dd>Is something people use sometimes.</dd>
+</dl>

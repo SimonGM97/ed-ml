@@ -1,0 +1,15 @@
+artifact_uri: file:///Users/simongarciamorillo/Library/CloudStorage/OneDrive-Personal/Documents/EdMachina/challenge/mlruns/176063670909512656/fe0a2ad0242e4ec89368ea4543a44ec7/artifacts
+end_time: 1702504338558
+entry_point_name: ''
+experiment_id: '176063670909512656'
+lifecycle_stage: active
+run_id: fe0a2ad0242e4ec89368ea4543a44ec7
+run_name: treasured-bee-195
+run_uuid: fe0a2ad0242e4ec89368ea4543a44ec7
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1702504260857
+status: 3
+tags: []
+user_id: simongarciamorillo

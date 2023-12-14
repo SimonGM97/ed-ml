@@ -1,7 +1,6 @@
 #!/bin/bash
-# export DOCKERHUB_TOKEN=dckr_pat_7yTPWD938TSdkt3CA04IpW5wLXw
-# chmod +x ./scripts/_bash/model_building_workflow.sh
-# ./scripts/_bash/model_building_workflow.sh
+# chmod +x ./scripts/bash/model_building_workflow.sh
+# ./scripts/bash/model_building_workflow.sh
 
 # Set repository variables
 REPOSITORY_NAME=ed-ml-docker
