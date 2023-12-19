@@ -31,6 +31,13 @@ class DataCleaner:
     def correct_periodo(
         df: pd.DataFrame
     ):
+        """
+        Method that corrects column "periodo" so that it only contains valid values.
+
+        :param save: (pd.DataFrame) DataFrame with raw "periodo" column.
+
+        :return: (pd.DataFrame) DataFrame with corrected "periodo" column values.
+        """
         def correct_date(date: str):
             day, year = date.split('-')
             day = ('0' + day)[-2:]
@@ -50,6 +57,13 @@ class DataCleaner:
     def format_datetime_columns(
         df: pd.DataFrame
     ) -> pd.DataFrame:
+        """
+        Method that casts datetime columns into datetime objects.
+
+        :param save: (pd.DataFrame) DataFrame with raw datetime columns.
+
+        :return: (pd.DataFrame) DataFrame with corrected datetime column types.
+        """
         # Format datetime columns
         df[Params.datetime_columns] = (
             df[Params.datetime_columns]
@@ -66,12 +80,15 @@ class DataCleaner:
         df: pd.DataFrame
     ) -> pd.DataFrame:
         """
-        Se asume que:
-            - Si un alumno tiene una nota parcial nula, en una partición donde hubo un parcial, entonces se 
-              asume que el alumno estuvo ausente para ese parcial y tuvo un 0 en ese examen.
-            - Si un alumno tiene una nota de assignment nula, en una partición donde hubo una entrega, 
-              entonces se asume que el alumno no llegó a entregar el trabajo en tiempo y forma, con lo cual
-              tuvo un 0 en esa entrega
+        Method that will fill null values for tests & assignments, based on the following assumptions:
+            - If a user_uuid has a null nota_parcial, then it will be interpreted as the student being 
+              absent for the exam; thus the student will be assigned a 0 score for that exam.
+            - If a user_uuid has a null assignment score, then it will be interpreted as the student not 
+              submitting any material; thus the student will be assigned a 0 score for that assignment.
+
+        :param save: (pd.DataFrame) DataFrame with unexpected null values in "nota_parcial" or "score".
+
+        :return: (pd.DataFrame) DataFrame without unexpected null values in "nota_parcial" or "score".
         """
         # Fill null nota_parcial
         df.loc[
@@ -94,8 +111,18 @@ class DataCleaner:
         df: pd.DataFrame
     ) -> pd.DataFrame:
         """
-        Función que alinea (en una misma fila) los assignments creation y los assignment
-        submissions.            
+        Method that alligns, on a same row, the assignment creations with their respective assignment 
+        submissions, by applying the following steps:
+            1) Find assignment submissions & assignment creations
+            2) Corect assignment submissions with it's corresponding assignment creation
+            3) Concatenate corrected assignments with initial DataFrame
+            4) Fill assignment creations with no assignment submissions, assuming a 0 score for that 
+               assignment.
+            5) Clean unnecessary assignment creations (repeated observations that have already been matched)
+
+        :param save: (pd.DataFrame) DataFrame with missaligned assignment creations & assignment submissions.
+
+        :return: (pd.DataFrame) DataFrame with alligned assignment creations & assignment submissions.
         """
         def complete_assignment_creation(gb_df: pd.DataFrame):
             # Find assignment submissions
@@ -163,54 +190,71 @@ class DataCleaner:
         return df
 
     @staticmethod
-    def clean_duplicate_assignments(
+    def clean_duplicates(
         df: pd.DataFrame
     ) -> pd.DataFrame:
         """
-        Se asume que:
-            - Si para un mismo alumno, curso y assignment hay más de una observación, entonces se trata de un 
-              trabajo con distintas entregas parciales, en donde la nota resultante está dado por el promedio 
-              de las entregas parciales.
-        """
+        Function that will correct unexpected duplicate observations, based on the following assumptions:
+            - If there is more than one observation for the same user_uuid, course_uuid & nombre_examen, 
+              this will be interpreted as a multiple part exam, where the final note (for that exam) is 
+              given by the average of the partial submissions.
+            - If theere is more thatn one observation for the same user_uuid, course_uuid & ass_name_sum, 
+              this will be interpreted as a multiple part assignment, where the final note (for that 
+              assignment exam) is given by the average of the partial submissions.
 
+        :param save: (pd.DataFrame) DataFrame containing unintended duplicate observations.
+
+        :return: (pd.DataFrame) DataFrame without unintended duplicate observations.
+        """
         def find_agg_fun(col: str):
             if col in list(df.select_dtypes(include=['object', 'datetime']).columns):
                 return 'first'
             return 'mean'
         
-        # Find observations to correct
-        subset_cols = ['user_uuid', 'course_uuid', 'ass_name_sub']
-        mask = (
-            (df['ass_name_sub'].notna()) &
-            (df.duplicated(subset=subset_cols, keep='first') | df.duplicated(subset=subset_cols, keep='last'))
-        )
-        
-        # Correct found observations
-        corrected_obs = (
-            df.loc[mask]
-            .groupby(subset_cols)
-            .agg({col: find_agg_fun(col) for col in df.columns})
-            .reset_index(drop=True)
-        )
+        def clean_duplicates_in(df: pd.DataFrame, col: str):
+            # Find observations to correct
+            subset_cols = ['user_uuid', 'course_uuid', col]
+            mask = (
+                (df[col].notna()) &
+                (df.duplicated(subset=subset_cols, keep='first') | df.duplicated(subset=subset_cols, keep='last'))
+            )
+            
+            # Correct found observations
+            corrected_obs = (
+                df.loc[mask]
+                .groupby(subset_cols)
+                .agg({col: find_agg_fun(col) for col in df.columns})
+                .reset_index(drop=True)
+            )
 
-        # Concatenate corrected observations
-        df = df.loc[~mask]
-        df = pd.concat([df, corrected_obs])
+            # Concatenate corrected observations
+            df = df.loc[~mask]
+            df = pd.concat([df, corrected_obs])
+
+            return df
+
+        # Correct parcial duplicates
+        df = clean_duplicates_in(df=df, col='nombre_examen')
+
+        # Correct assignment submissions duplicates
+        df = clean_duplicates_in(df=df, col='ass_name_sub')
 
         return df
     
-    def cleaner_pipeline(
+    def run_cleaner_pipeline(
         self,
         save: bool = False
     ) -> pd.DataFrame:
         """
-        Execute the data cleaning pipeline, which will:
-            - Add target column
+        Method that executes the data cleaning pipeline, which will:
+            - Correct period values
             - Format datetime columns
-            - Clean nota parcial
-            - Clean duplicate assignments
+            - Fill values for tests & assignments
+            - Clean duplicate observations
             - Alligh assignments, so that assignment creation and assignment submissions 
               are found in the same row
+            - Sorts results y user_uuid, course_uuid & particion
+            - (optionally) saves intermediate results.
 
         :param save: (bool) Whether to save the cleaned dataset.
 
@@ -229,7 +273,7 @@ class DataCleaner:
         self.df = self.allign_assignments(df=self.df)
 
         # Clean duplicate assignments
-        self.df = self.clean_duplicate_assignments(df=self.df)
+        self.df = self.clean_duplicates(df=self.df)
 
         # Sort DataFrame
         self.df.sort_values(

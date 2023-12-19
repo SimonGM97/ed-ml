@@ -1,0 +1,15 @@
+artifact_uri: file:///Users/simongarciamorillo/Library/CloudStorage/OneDrive-Personal/Documents/EdMachina/challenge/mlruns/176063670909512656/f1102756fabd47baa2b7d120a1e44d2b/artifacts
+end_time: 1703013869780
+entry_point_name: ''
+experiment_id: '176063670909512656'
+lifecycle_stage: active
+run_id: f1102756fabd47baa2b7d120a1e44d2b
+run_name: valuable-fish-733
+run_uuid: f1102756fabd47baa2b7d120a1e44d2b
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1702563458501
+status: 3
+tags: []
+user_id: simongarciamorillo

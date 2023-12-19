@@ -8,6 +8,9 @@
 # System-specific files
 .DS_Store
 
+# Notebook checkpoints
+.ipynb_checkpoints/
+
 # Test
 .pytest_cache/
 

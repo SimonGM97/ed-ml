@@ -1,8 +1,9 @@
 artifact_uri: file:///Users/simongarciamorillo/Library/CloudStorage/OneDrive-Personal/Documents/EdMachina/challenge/mlruns/176063670909512656/bc23134466af4abbbe8de953084d77a4/artifacts
-end_time: 1702504342408
+deleted_time: 1702579910539
+end_time: 1702565235496
 entry_point_name: ''
 experiment_id: '176063670909512656'
-lifecycle_stage: active
+lifecycle_stage: deleted
 run_id: bc23134466af4abbbe8de953084d77a4
 run_name: fearless-mole-34
 run_uuid: bc23134466af4abbbe8de953084d77a4

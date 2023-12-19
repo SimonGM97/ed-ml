@@ -17,30 +17,64 @@ The **ed_ml** package can be used to:
 
 
 &nbsp;
-## Table of Contents
-----------------------
+# Table of Contents
 
-- [Installation](#Installation)
-- [Usage](#Usage)
-- [Workflows](#Workflows)
-- [Processes](#Processes)
-- [API reference](#APIreference)
-- [Testing](#Testing)
-- [License](#License)
-- [Author](#Author)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Workflows](#workflows)
+- [Processes](#processes)
+  - [Data Processing](#data-processing)
+  - [Model Tuning](#model-tuning)
+  - [Model Updating](#model-updating)
+  - [Model Serving](#model-serving)
+  - [App Running](#app-running)
+- [API reference](#apireference)
+  - [DataCleaner](#datacleaner)
+  - [FeatureEngineer](#featureengineer)
+  - [ModelTuner](#modeltuner)
+  - [Model](#model)
+  - [MLPipeline](#mlpipeline)
+  - [ModelRegistry](#modelregistry)
+- [Outputs](#outputs)
+- [File Structure](#fileStructure)
+- [Configuration and Settings](#configurationandsettings)
+- [Testing](#testing)
+- [CI/CD Pipeline](#ci/cd-pipeline)
+- [Next Steps](#next-steps)
+- [License](#license)
+- [Author](#author)
 
 
 &nbsp;
-## Installation
-----------------------
+# Installation
     
 1. Create python virtual environment:
 ```
 python3 -m venv .venv
 ```
-2. Install ed_ml module in "editable" mode:
+2. Install the ed_ml module in "editable" mode:
 ```
 pip install -e .
+```
+  - *Note that this command will also install the following dependencies, specified in `requirements.txt`:*
+```
+setuptools==69.0.2
+pandas==2.1.3
+numpy==1.26.2
+scikit-learn==1.3.2 
+shap==0.43.0
+lightgbm==4.1.0
+xgboost==2.0.2
+mlflow==2.8.1
+hyperopt==0.2.7
+imbalanced-learn==0.11.0
+flask==3.0.0
+pytest==7.4.3
+streamlit==1.29.0
+watchdog==3.0.0
+plotly==5.18.0
+openpyxl==3.1.2
+psutil==5.9.6
 ```
 3. Install & run the [Docker Desktop](https://docs.docker.com/engine/install/) application.
 4. Set the `DOCKERHUB_TOKEN` environment variable to pull images from the `ed-ml-docker` dockerhub repository:
@@ -50,10 +84,9 @@ export DOCKERHUB_TOKEN=token_value
 
 
 &nbsp;
-## Usage
-----------------------
+# Usage
 
-### Quick Start
+## Quick Start
 
 The most straight-forward way to interact with the solution is through the **Streamlit web-app**. To do so, run the following commands:
 ```
@@ -70,6 +103,11 @@ This will run the `run_app.sh` bash script, which will:
   - This will serve the **champion** model leveraging the `flash` library to set up a live **endpoint**
 - Run a `app_container_v1.0.0` from the `app_image_v1.0.0` image
   - This will deploy a streamlit web-app to interact with the model & generate new inferences.
+
+<div align="center">
+<img src="./docs/images/app_run.png" width="600">
+</div>
+&nbsp;
 
 Finally, open the web-app through the url: [http://localhost:8501](http://localhost:8501)
 &nbsp;
@@ -101,7 +139,7 @@ Additionally, the models stored in the **Model Registry** can be examined in the
 </div>
 
 &nbsp;
-### Other ways to consume the model
+## Other ways to consume the model
 - The `champion` model can be consumed programatically, as follows:
 
 ```python
@@ -136,31 +174,739 @@ prediction = requests.post(
 
 
 &nbsp;
-## Workflows
-----------------------
+# Workflows
+
+The main workflow that can be ran with the **ed-ml** repository is the `model_building_workflow`; which is designed to orchestrate the following sequential processes:
+- Run a **Data Processing** job
+- Run a **Model Tuning**  job
+- Run a **Model Updating** job
+
+*Note that each of these processes will be further discussed in the [Processes](#processes) section.*
+
+In order to start the workflow, run the following commands:
+```
+chmod +x ./scripts/bash/model_building_workflow.sh
+```
+```
+./scripts/bash/model_building_workflow.sh
+```
+
+This bash script will:
+- Log in to the `ed-ml-docker` dockerhub repository
+- Pull the `data_processing_image_v1.0.0`, `model_tuning_image_v1.0.0` & `model_updating_image_v1.0.0` docker images.
+- Run the `docker-compose.yaml` file that will run and orchestrate docker containers from the docker images.
+
+<div align="center">
+<img src="./docs/images/model_building_workflow.png" width="700">
+</div>
+&nbsp;
 
 
 &nbsp;
-## Processes
-----------------------
+# Processes
+
+In turn, the **ed-ml** repository contains different processes/jobs that can be ran either individually (as docker containers from the docker images stored in the dockerhub repository), or as part of the broader **workflow** detailed above.
+
+## Data Processing
+
+The **Data Processing** job is based on a sequence of data transformation steps, organized to clean raw datasets & extract meaningfull features to aid in the **Modeling** section of the project. As the diagram shows, these processes are run by various methods from the `DataCleaning` & `FeatureEngineer` classes:
+- load_raw_data (from the *utils* module)
+- **[DataCleaning](#datacleaner)**:
+  - *run_cleaner_pipeline()*:
+    - *correct_period()*
+    - *format_datetime_columns()*
+    - *fill_null_test_and_ass()*
+    - *allign_assignments()*
+    - *clean_duplicates()*
+    - *sort_values()*
+    - *save_datasets()*
+- **[FeatureEngineer](#featureengineer)**:
+  - *run_feature_engineering_pipeline()*:
+    - *add_target_column()*
+    - *add_timing_based_features()*
+    - *prepare_intermediate_features()*
+    - *calculate_expanding_features()*
+    - *remove_unuseful_obs()*
+    - *fillna()*
+    - *save_datasets()*
+
+*For further detail, skip to the [API reference](#apireference) section.*
+
+<div align="center">
+<img src="./docs/images/data_processing_job.png" width="800">
+</div>
+&nbsp;
+
+These are the schemas of the raw DataFrame (*input*) and ml DataFrame (*output*):
+
+<div align="center">
+<img src="./docs/images/raw_data_schema.png" width="600">
+</div>
+&nbsp;
+
+<div align="center">
+<img src="./docs/images/ml_data_schema.png" width="600">
+</div>
+&nbsp;
+
+## Model Tuning
+
+## Model Updating
+
+## Model Serving
+
+## App Running
 
 
 &nbsp;
-## APIreference
-----------------------
+# API Reference
+
+The processes defined previously require the use of the following classes and methods:
+
+&nbsp;
+## DataCleaner
+
+Class for cleaning and preprocessing raw datasets.
+
+### Attributes
+
+- `df`: (pd.DataFrame) Input DataFrame that will be transformed throughout subsequent methods.
+
+### Methods
+
+#### `run_cleaner_pipeline(save: bool = False) -> pd.DataFrame`:
+
+Method that will execute the data cleaning pipeline, which will:
+1) Correct period values
+2) Format datetime columns
+3) Fill values for tests & assignments
+4) Clean duplicate observations
+5) Alligh assignments, so that assignment creation and assignment submissions are found in the same row
+6) Sorts results y user_uuid, course_uuid & particion
+7) (optionally) saves intermediate results.
+
+- :param `save`: (bool) Whether to save the cleaned dataset.
+- :return: (pd.DataFrame) Cleaned DataFrame.
+
+
+#### `correct_periodo(df: pd.DataFrame) -> pd.DataFrame`:
+
+Method that corrects column "periodo" so that it only contains valid values.
+
+- :param `df`: (pd.DataFrame) DataFrame with raw "periodo" column.
+- :return: (pd.DataFrame) DataFrame with corrected "periodo" column values.
+
+
+#### `format_datetime_columns(df: pd.DataFrame) -> pd.DataFrame`:
+
+Method that casts datetime columns into datetime objects.
+
+- :param `df`: (pd.DataFrame) DataFrame with raw datetime columns.
+- :return: (pd.DataFrame) DataFrame with corrected datetime column types.
+
+
+#### `fill_null_test_and_ass(df: pd.DataFrame) -> pd.DataFrame`:
+
+Method that will fill null values for tests & assignments, based on the following assumptions:
+1) If a user_uuid has a null nota_parcial, then it will be interpreted as the student being absent for the exam; thus the student will be assigned a 0 score for that exam.
+2) If a user_uuid has a null assignment score, then it will be interpreted as the student not submitting any material; thus the student will be assigned a 0 score for that assignment.
+
+- :param `df`: (pd.DataFrame) DataFrame with unexpected null values in "nota_parcial" or "score".
+- :return: (pd.DataFrame) DataFrame without unexpected null values in "nota_parcial" or "score".
+
+
+#### `allign_assignments(df: pd.DataFrame) -> pd.DataFrame`:
+
+Method that alligns, on a same row, the assignment creations with their respective assignment submissions, by applying the following steps:
+1) Find assignment submissions & assignment creations
+2) Corect assignment submissions with it's corresponding assignment creation
+3) Concatenate corrected assignments with initial DataFrame
+4) Fill assignment creations with no assignment submissions, assuming a 0 score for that assignment.
+5) Clean unnecessary assignment creations (repeated observations that have already been matched)
+
+- :param `df`: (pd.DataFrame) DataFrame with missaligned assignment creations & assignment submissions.
+- :return: (pd.DataFrame) DataFrame with alligned assignment creations & assignment submissions.
+
+
+#### `allign_assignments(df: pd.DataFrame) -> pd.DataFrame`:
+
+Function that will correct unexpected duplicate observations, based on the following assumptions:
+1) If there is more than one observation for the same user_uuid, course_uuid & nombre_examen, this will be interpreted as a multiple part exam, where the final note (for that exam) is given by the average of the partial submissions.
+2) If theere is more thatn one observation for the same user_uuid, course_uuid & ass_name_sum, this will be interpreted as a multiple part assignment, where the final note (for that assignment exam) is given by the average of the partial submissions.
+
+- :param `df`: (pd.DataFrame) DataFrame containing unintended duplicate observations.
+- :return: (pd.DataFrame) DataFrame without unintended duplicate observations.
+
+
+#### `save_dataset() -> None`:
+Save the cleaned dataset to a CSV file.
+
+
+#### `load_dataset() -> None`:
+Load the cleaned dataset from a CSV file.
+
+
+&nbsp;
+## FeatureEngineer
+
+Class used to perform feature engineering processes & transformations required to generate ML datasets that will later be consumed by ML models.
+
+### Attributes
+
+- `df`: (pd.DataFrame) Input DataFrame that will be transformed throughout subsequent methods.
+
+### Methods
+
+#### `run_feature_engineering_pipeline(save: bool = False) -> pd.DataFrame`:
+
+Method that executes the feature engineering pipeline, which will:
+1) Add target column
+2) Calculate timing based features
+3) Calculate intermediate features
+4) Calculate aggregated features on expanding DataFrame
+5) Remove unusefull observations
+6) Fill null observations
+7) Save engineered dataset
+
+- :param `save`: (bool) Whether to save the cleaned dataset.
+- :return: (pd.DataFrame) Cleaned DataFrame.
+
+
+#### `add_target_column(df: pd.DataFrame) -> pd.DataFrame`:
+
+Method that will produce the target variable by assigning a 1 if the final grade is greater or equal to 4, and a 0 if that is not the case.
+
+- :param `df`: (pd.DataFrame) DataFrame without target column.
+- :return: (pd.DataFrame) DataFrame with target column.
+
+
+#### `add_timing_based_features(df: pd.DataFrame) -> pd.DataFrame`:
+
+Method that will create features realted to the time at which the assignments were unlocked, submitted and due at. The intent is to model & distinguish lazy students that usually prepare and submit assignments
+near the deadline; compared to dedicated students that usually submit assignments with time to spare.
+
+Features being created:
+1) hrs_to_do_assignment: total hours assigned to do an assignment (from unlock date until due date)
+2) hrs_taken_to_do_assignment: number of hours spent by the student to do the assignment (from unlock  date until submittion date)
+3) rel_time_taken_to_do_assignment: the number of hours spent working on the exam, relative to the total hours available to do the exam.
+4) hrs_before_due: number of spare hours that the student had when submitting the assignment (from submission date until due date).
+
+Note that this method requires the transformation DataCleaner.allign_assignments() to have been ran.
+
+- :param `df`: (pd.DataFrame) DataFrame without timing based features.
+- :return: (pd.DataFrame) DataFrame with timing based features.
+
+
+#### `prepare_intermediate_features(df: pd.DataFrame) -> pd.DataFrame`:
+
+Method that will calculate features required for a more seamingless calculation of cumulative features that will be generated in the self.calculate_expanding_features() method.
+
+Features created:
+1) parciales_n: column containing a 1 if the student has taken a 'PRIMER PARCIAL(20)' or 'SEGUNDO PARCIAL(20)' in that partition.
+2) nota_parciales: column containing the grade of the 'PRIMER PARCIAL(20)' or 'SEGUNDO PARCIAL(20)' that was obtained in that partition.
+3) integradores_n: column containing a 1 if the student has taken a 'INTEGRADOR(30)' exam in that partition.
+4) nota_integradores: column containing the grade of the 'INTEGRADOR(30)' that was obtained in that partition.
+5) recuperatorios_n: column containing a 1 if the student has taken a 'RECUPERATORIO PRIMER PARCIAL(20)' or 'RECUPERATORIO SEGUNDO PARCIAL(20)' in that partition.
+6) nota_recuperatiorios: column containing the grade of the 'RECUPERATORIO PRIMER PARCIAL(20)' or 'RECUPERATORIO SEGUNDO PARCIAL(20)' that was obtained in that partition.
+7) overall_parciales_n: column containing a 1 if the student has taken any exam in that partition.
+8) assignment_n: column containing a 1 if the student has submitted any assignment in that partition.
+9) assignment_zero: column that reflect if an assignment was graded with a 0.
+
+- :param `df`: (pd.DataFrame) DataFrame without intermediate features.
+- :return: (pd.DataFrame) DataFrame with intermediate features.
+
+
+#### `prepare_intermediate_features(df: pd.DataFrame) -> pd.DataFrame`:
+
+Method that will calculate aggregated features on an expanding DataFrame. This is designed so that the 
+value of a feature calculated at a particular partition, is considering all information upto that 
+partition.
+
+Applied Transformations:
+1) Exam related engineered features
+  - parciales_n:
+    - sum: count of exams taken, until that partition
+  - nota_parciales: 
+    - min: minimum grade obtained in an exam, until that partition.
+    - max: maximum grade obtained in an exam, until that partition.
+    - mean: mean grade obtained in an exam, until that partition.
+    - std: standard deviation of grades obtained in an exam, until that partition.
+  - integradores_n: 
+    - sum: count of integradores taken, until that partition
+  - nota_integradores:
+    - min: minimum grade obtained in an integrador exam, until that partition.
+    - max: maximum grade obtained in an integrador exam, until that partition.
+    - mean: mean grade obtained in an integrador exam, until that partition.
+    - std: standard deviation of grades obtained in an integrador exam, until that partition.
+  - recuperatorios_n:
+    - sum: count of make-up exams taken, until that partition.
+  - nota_recuperatorios:
+    - min: minimum grade obtained in a make-up exam, until that partition.
+    - max: maximum grade obtained in a make-up exam, until that partition.
+    - mean: mean grade obtained in a make-up exam, until that partition.
+    - std: standard deviation of grades obtained in a make-up exam, until that partition.
+  - overall_parciales_n:
+    - sum: count of all kinds of exams taken, until that partition.
+  - nota_overall:
+    - min: minimum grade obtained on all exams taken, until that partition.
+    - max: maximum grade obtained on all exams taken, until that partition.
+    - mean: mean grade obtained on all exams taken, until that partition.
+    - std: standard deviation of grades obtained on all exams taken, until that partition.
+
+2) Assignment related engineered features
+  - assignment_n:
+    - sum: count of all assignments submitted, until that partition.
+  - score:
+    - min: minimum grade obtained on all assignments submitted, until that partition.
+    - max: maximum grade obtained on all assignments submitted, until that partition.
+    - mean: mean grade obtained on all assignments submitted, until that partition.
+    - std: standard deviation of grades obtained on all assignments submitted, until that 
+      partition.
+  - assignment_zero:
+    - sum: count of all assignments submitted which were graded with a 0, until that partition.
+
+3) Time related engineered features
+  - hrs_to_do_assignment:
+    - min: minimum available hours to complete an assignment, until that partition.
+    - max: maximum available hours to complete an assignment, until that partition.
+    - mean: mean available hours to complete an assignment, until that partition.
+    - std: standard deviation of available hours to complete an assignment, until that partition.
+  - hrs_taken_to_do_assignment:
+    - min: minimum hours taken to complete an assignment, until that partition.
+    - max: maximum hours taken to complete an assignment, until that partition.
+    - mean: mean hours taken to complete an assignment, until that partition.
+    - std: standard deviation of hours taken to complete an assignment, until that partition.
+  - rel_time_taken_to_do_assignment:
+    - min: minimum relative time taken to complete an assignment, until that partition.
+    - max: maximum relative time taken to complete an assignment, until that partition.
+    - mean: mean relative time taken to complete an assignment, until that partition.
+    - std: standard deviation of the relative time taken to complete an assignment, until that partition.
+  - hrs_before_due:
+    - min: minimum number of spare hours that the student had when submitting an assignment, until that partition.
+    - max: maximum number of spare hours that the student had when submitting an assignment, until that partition.
+    - mean: mean number of spare hours that the student had when submitting an assignment, until that partition.
+    - std: standard deviation of the number of spare hours that the student had when submitting an assignment, until that partition.
+
+- :param `df`: (pd.DataFrame) DataFrame without expanding features.
+- :return: (pd.DataFrame) DataFrame with expanding features.
+
+
+#### `remove_unuseful_obs(df: pd.DataFrame) -> pd.DataFrame`:
+
+Method that will remove partitions until the first exam was taken or assignment was submitted.
+The reason for removing observations until this point is so that ML models will have at least some useful information to make inferences & understand patterns.
+
+- :param `df`: (pd.DataFrame) DataFrame containing "unuseful" observations.
+- :return: (pd.DataFrame) DataFrame without "unuseful" observations.
+
+
+#### `save_dataset() -> None`:
+Save the engineered dataset to a CSV file.
+
+
+#### `load_dataset() -> None`:
+Load the engineered dataset from a CSV file.
+
+
+&nbsp;
+## ModelTuner
+
+Class designed to find the most performant classification ML models, leveraging hyperopt's TPE based search engine to optimize both the model flavor (or algorithm) & set of hyperparameters in order to train robust models with strong generalization capabilities.
+
+### Attributes
+
+- `algorithms`: (list) Model flavors to iterate over. 
+  - Currently available options: random_forest, lightgbm, xgboost.
+- `eval_metric`: (str) Name of the metric utilized to evaluate ML models over the validation set.
+  - Note: this is also the metric which will be optimized by the TPE algorithm.
+- `val_splits`: (int) Number of splits utilized in for cross validation of ML model candidates.
+- `train_test_ratio`: (float) Proportion of data to keep as the test set; relative to the complete dataset.
+- `n_candidates`: (int) Number of development models that will be chosen as potential candidates.
+- `local_registry`: (bool) Wether or not to load models from the file system or MLflow Model Registry.
+- `max_evals`: (int) Number of maximum iterations that the hyperopt.fmin() function will be allowed to search before finding the most performant candidates.
+- `timeout_mins`: (int) Number of minutes that the hyperopt.fmin() function will be allowed to run before finding the most performant candidates.
+- `loss_theshold`: (float) Theshold performance at which, if reached, the optimization algorithm will sease searching for a better model.
+- `min_performance`: (float) Minimum performance required for a candidate model to be logged in the mlflow tracking server.
+- `search_space`: (dict) Hyperparameter search space.
+- `ml_pipeline`: (MLPipeline) Instance of MLPipeline.
+- `model_registry`: (ModelRegistry) Instance of ModelRegistry.
+- `dev_models`: (List[Model]): Development models found by the hyperopt search engine.
+
+
+### Methods
+
+#### `run(ml_df: pd.DataFrame, use_warm_start: bool = True, soft_debug: bool = False, deep_debug: bool = False) -> None`:
+
+Main method that orchestrates the processes required to track, train and evaluate performant development models.
+This method will:
+1) Set up the mlflow tracking server (currently hosted locally).
+2) Define a balanced training set (which will be later divided in the cross validation section).
+3) Define a test set (unbalanced, in order to accurately depict the real group distributions).
+4) (Optional) Set up a "warm start" for the search engine, leveraging a performant solution found on a previous run.
+  - Note: utilizing warm start will find performant solutions potentially from the first iteration, but the search algorithm is predisposed to find local minima.
+5) Run the hyperopt's TPE based search engine.
+6) Load the most performant development models, based on the mean cross validation score (on the validation set).
+7) Evaluate the development models on the unbalanced test set.
+8) Save development models.
+
+- :param `ml_df`: (pd.DataFrame) Engineered DataFrame outputted by the FeatureEngineer class.
+- :param `use_warm_start`: (bool) Wether or not to utilize the optional warm start functionality.
+- :param `soft_debug`: (bool) Wether or not to show general intermediate logs for debugging purposes.
+- :param `deep_debug`: (bool) Wether or not to show intermediate logs in the objective function, for debugging purposes.
+
+
+#### `prepare_parameters(parameters: dict, debug: bool = False) -> dict`:
+
+Method designed to standardize the structure, complete required keys and interpret values of the set of parameters & hyperparameters that are being searched by the hyperopt TPE powered seach engine.
+
+- :param `parameters`: (dict) Parameters with raw structure, uncomplete keys & uninterpreted values.
+- :param `debug`: (bool) Wether or not to show input and output parameters for debugging purposes.
+
+- :return: (dict) Parameters with standardized structure, complete keys & interpreted values.
+
+
+#### `objective(parameters: dict, debug: bool = False) -> dict`:
+
+Method defined as the objective function for the hyperopt's TPE based search engine; which will:
+1) Standardize, complete & interprete inputed parameters
+2) Leverage MLPipeline to build a ML classification model with the inputed parameters
+3) Log the resulting model in the mlflow tracking server, if the validation performance is over a defined threshold.
+4) Output the validation performance (mean cross validation score) as the loss function.
+
+- :param `parameters`: (dict) Parameters with raw structure, uncomplete keys & uninterpreted values.
+- :param `debug`: (bool) Wether or not to show intermediate logs for debugging purposes.
+
+- :return: (dict) Loss function with the validation performance of the ML classification model.
+
+
+#### `find_dev_models() -> None`:
+
+Method that defines the top development models found by the search engine, by:
+1) Querying the top mlflow tracking server runs for each model flavor/algorithm, based on the mean cross validation score.
+2) Deleting unperformant runs from the tracking server.
+
+
+#### `evaluate_dev_models(debug: bool = False) -> None`:
+
+Method that evaluates the development models on the test set, defined in the MLPipeline.
+
+- :param `debug`: (bool) Wether or not to show self.dev_models performances logs for debugging purposes.
+
+
+&nbsp;
+## Model
+
+Class designed to homogenize the methods for building, evaluating, tracking & registering multiple types of ML classification models with different flavors/algorithms & hyperparameters, in a unified fashion. 
+
+### Attributes
+
+- `model_id`: (str) ID to tag & identify a Model instance.
+- `artifact_uri`: (str) URI required to load a pickled model from the mlflow tracking server.
+- `version`: (int) Model version, which increases by one each time the model gets re-fitted.
+- `stage`: (str) Model stage, which can be either "development", "staging" or "production".
+- `algorithm`: (str) Also known as model flavor. Current options are "random_forest", "lightgbm" & "xgboost".
+- `hyper_parameters`: (dict) Dictionart containing key-value pairs of the model hyper-parameters.
+- `model`: (RandomForestClassifier or XGBClassifier or LGBMClassifier) ML classifier instance.
+- `fitted`: (bool) Wether or not a model instance have been fitted.
+- `f1_score`: (float) F1 test score.
+- `precision_score`: (float) Precision test score.
+- `recall_score`: (float) Recall test score.
+- `roc_auc_score`: (float) Roc auc test score.
+- `accuracy_score`: (float) Accuracy test score
+- `cv_scores`: (np.ndarray) Cross validation scores.
+- `test_score`: (float) Main evaluation metric for test score.
+- `feature_importance_df`: (pd.DataFrame) Feature Importance DataFrame.
+
+### Properties (Can be accessed as attributes)
+
+- `warm_start_params`: (dict) Defines the parameters required for a warm start on the ModelTuner.run() method.
+- `metrics`: (dict) Defines the test and validation metrics to be logged in the mlflow tracking server.
+- `artifacts`: (dict) Defines the dictionary of attributes to be saved as artifacts in the mlflow tracking server.
+- `tags`: (dict) Defines the tags to be saved in the mlflow tracking server.
+- `val_score`: (np.ndarray) Defines the validation score as the mean value of the cross validation results.
+- `run_id`: (str) Finds the run_id, which is accessed throughout the self.artifact_uri.
+- `file_name`: (str) Defines the file name in which to save the self.model in the file system.
+- `model_name`: (str) Defines the model name used in the mlflow tracking server and mlflow model registry.   
+
+### Methods
+
+#### `correct_hyper_parameters(hyper_parameters: dict, debug: bool = False) -> dict`:
+
+Method that completes pre-defined hyperparameters.
+
+- :param `hyper_parameters`: (dict) hyper_parameters that might not contain pre-defined hyperparameters.
+- :param `debug`: (bool) Wether or not to show output hyper_parameters for debugging purposes.
+
+- :return: (dict) hyper_parameters containing pre-defined hyperparameters.
+
+
+#### `build(debug: bool = False) -> None`:
+
+Method to instanciate the specified ML classification model, based on the model flavor/alrorithm & hyper-parameters.
+
+- :param `debug`: (bool) Wether or not to show output hyper_parameters for debugging purposes.
+
+
+#### `fit(y_train: pd.DataFrame = None, X_train: pd.DataFrame = None) -> None`:
+
+Method to fit self.model.
+
+- :param `y_train`: (pd.DataFrame) Binary & balanced train target.
+- :param `X_train`: (pd.DataFrame) Train features.
+
+
+#### `evaluate_val(y_train: pd.DataFrame, X_train: pd.DataFrame, eval_metric: str, splits: int, debug: bool = False) -> None`:
+
+Method that will define a score metric (based on the eval_metric parameter) and will leverage the cross validation technique to obtain the validation scores.
+
+- :param `y_train`: (pd.DataFrame) binary & balanced train target.
+- :param `X_train`: (pd.DataFrame) Train features.
+- :param `eval_metric`: (str) Metric to measure on each split of the cross validation.
+- :param `splits`: (int) Number of splits to perform in the cross validation.
+- :param `debug`: (bool) Wether or not to show self.cv_scores, for debugging purposes.
+
+
+#### `evaluate_test(y_test: pd.DataFrame, X_test: pd.DataFrame, eval_metric: str, debug: bool = False) -> None`:
+
+Method that will predict test set values and define the following test metrics:
+1) self.f1_score
+2) self.precision_score
+3) self.recall_score
+4) self.roc_auc_score
+5) self.accuracy_score
+6) self.test_score (utilized to define champion model)
+
+- :param `y_test`: (pd.DataFrame) Binary & un-balanced test target.
+- :param `X_test`: (pd.DataFrame) Test features.
+- :param `eval_metric`: (str) Metric utilized to define the self.test_score attribute.
+- :param `debug`: (bool) Wether or not to show self.test_score, for debugging purposes.
+
+
+#### `predict(X: pd.DataFrame) -> np.ndarray:`
+
+Method for realizing new category inferences.
+
+- :param `X`: (pd.DataFrame) New features to make inferences on.
+
+- :return: (np.ndarray) New category inferences.
+
+
+#### `predict_proba(X: pd.DataFrame) -> np.ndarray`:
+
+Method for realizing new probabilistic inferences.
+
+- :param `X`: (pd.DataFrame) New features to make inferences on.
+
+- :return: (np.ndarray) New probabilistic inferences.
+
+
+#### `find_feature_importance(X_test: pd.DataFrame, debug: bool = False) -> None`:
+
+Method that utilizes the shap library to calculate feature impotances on the test dataset (whenever possible).
+
+- :param `test_features`: (pd.DataFrame) Test features.
+- :param `find_new_shap_values`: (bool) Wether or not to calculate new shaply values.
+- :param `debug`: (bool) Wether or not to show top feature importances, for debugging purposes.
+
+
+#### `save(self) -> None`:
+
+Method used to save the Model attributes on file system, mlflow tracking server and mlflow model registry.
+
+
+#### `save_to_file_system(self) -> None`:
+
+Method that will save Model's attributes in file system.
+
+
+#### `log_model(self) -> None`:
+
+Method that will log the following attributes on mlflow tracking server:
+- self.model
+- self.hyper_parameters
+- self.metrics
+- self.artifacts
+- self.tags
+
+
+#### `register_model(self) -> None`:
+
+Method that will register the model in the mlflow model registry. It will additionally set the tags, current version and current stage.
+
+
+#### `load_from_file_system(self) -> None`:
+
+Method that will load model attributes from the file system.
+
+
+#### `load_from_registry(load_model_from_tracking_server: bool = False) -> None`:
+
+Method that will load tags, parameters, metrics and artifacts from the mlflow tracking server, and will load self.model from the mlflow model registry (if specified).
+
+- :param `load_model_from_tracking_server`: (bool) Wether or not to load self.model from the mlflow tracking server or the model registry.
 
 
 
 &nbsp;
-## Testing
-----------------------
+## MLPipeline
+
+Class designed to standardize the main modelling processes:
+- Preparing machine learning datasets.
+- Running a model building pipeline.
+- Running an inference pipeline.
+- Running an model updating pipeline.
+
+### Attributes
+
+- `X_train`: (pd.DataFrame) Train features.
+- `X_test`: (pd.DataFrame) Test features.
+- `y_train`: (pd.DataFrame) Train target.
+- `y_test`: (pd.DataFrame) Test target.
+
+### Methods
+
+#### `prepare_datasets(ml_df: pd.DataFrame, train_test_ratio: float, debug: bool = False) -> None`:
+
+Method that will prepare machine learning datasets, by:
+1) Randomly selecting train & test datasets.
+2) Balancing the train datasets (X_train & y_train) with an oversampling technique
+
+Note that the test datasets (X_test & y_test) are purposely kept unbalanced to more accurately depict the real life group proportions; thus achieving a better estimate of the model performance in a production environment. 
+
+- :param `ml_df`: (pd.DataFrame) Engineered DataFrame outputted by the FeatureEngineer class.
+- :param `train_test_ratio`: (float) Proportion of data to keep as the test set; relative to the complete dataset.
+- :param `debug`: (bool) Wether or not to show dataset balances for debugging purposes.
+
+
+#### `build_pipeline(ml_params: dict, eval_metric: str, splits: int, debug: bool = False) -> Model`:
+
+Method that will run the model building pipeline, by:
+1) Instanciateing the model.
+2) Evaluating the cross validation score over the train datasets.
+3) Re-fit the model with the complete train datasets.
+
+- :param `ml_params`: (dict) Parameters required when instanciating the Model class.
+- :param `eval_metric`: (str) Name of the metric utilized to evaluate ML model over the validation set.
+- :param `splits`: (int) Number of splits utilized in for cross validation of ML model.
+- :param `debug`: (bool) Wether or not to show intermediate results, for debugging purposes.
+
+- :return: (Model) Fitted Model instance.
+
+
+#### `inference_pipeline(model: Model, raw_df: pd.DataFrame) -> dict`:
+
+Method that will run the inference pipeline, by:
+1) Cleaning new raw datasets.
+2) Calculating engineered datasets.
+3) Extracting a new X dataset.
+4) Performing new probabilistic predictions.
+
+- :param `model`: (Model) Instance from class Model utilized to infer new predictions.
+- :param `raw_df`: (pd.DataFrame) New raw observations to make inferences on.
+
+
+#### `updating_pipeline(model: Model, eval_metric: str, refit_model: bool = False) -> Model`:
+
+Method that will run the model updating pipeline, by:
+1) (Optionally) Re-fitting model on new train datasets.
+2) Evaluating model on test set & update test performance scores.
+3) Calculating feature importance.
+
+- :param `model`: (Model) Instance from class Model that will be updated.
+- :param `eval_metric`: (str) Name of the metric utilized to evaluate ML model over the test set.
+- :param `refit_model`: (bool) Wether or not to re-fit the inputed model with train datasets.
+- :param `find_new_shap_values`: (bool) Wether or not to calculate new shaply values.
 
 
 &nbsp;
-## Author
-----------------------
+## ModelRegistry
+
+Class designed to organize, manage & update model repositories in a centralized fashion. This includes:
+- Tracking of development models throughout the mlflow tracking server.
+- Registry of staging & production models in the mlflow model registry.
+- Saving models in the file system (for backup purposes)
+
+### Attributes
+
+- `local`: (bool) Wether or not to utilize the file system to load development, staging & production models.
+- `local_registry`: (Dict[str, List[str]]) Dictionary with model IDs for development, staging & production models.
+
+### Properties
+
+- `dev_models`: (List[Model]) Method for loading development models.
+- `staging_models`: (List[Model]) Method for loading staging models.
+- `prod_model`: (Model) Method for the production model.
+
+### Methods
+
+#### `load_models(model_ids: List[str] = None, stage: str = 'development') -> List[Model]`:
+
+Method that will load specified models.
+
+- :param `model_ids`: (List[str]) Model IDs that will be loaded.
+  - Note that this is only required for loading models from the file system.
+- :param `stage`: (str) Stage from which to load models from.
+  - Note that this is only required for loading models from the mlflow model registry/tracking server.
+
+- :return: (List[Model]) List of Model instances with the loaded models.
 
 
+#### `set_up_tracking_server(self) -> None`:
+
+Method that will locally host the mlflow tracking server on port 5050, for experiment tracking.
+
+
+#### `register_models(self) -> None`:
+
+Method that will register staging & production models on the mlflow model registry.
+
+
+#### `update_model_stages(n_candidates: int, update_champion: bool = True) -> None`:
+
+Method that will re-define model stages, applying the following logic:
+1) Top n development models will be promoted as "staging" models (also referred as "challenger" models), based on their mean cross validation performance.
+2) The top staging model will compete with the production model (also referred as "champion" model), based on their test performance.
+
+- :param `n_candidates`: (int) Number of total challenger models whose test performance will be compared in order to determine the champion model.
+  - Note that overly increasing this number might eventually lead to overfitting on the test set.
+- :param `update_champion`: (bool) Wether or not to allow for competition of challenger and champion models.
+  - If true, a challenger model could potentially be promoted to champion (production) status.
+
+
+#### `clean_registry(self) -> None`:
+
+Method that will remove any "inactive" model or experiment from the file system, mlflow tracking server and mlflow model registry.
+An "inactive" model is defined as a model that cannot be tagged to any current development, staging or production model.
+
+
+#### `save_local_registry(self) -> None`:
+
+Method that will save the self.local_regisry attribute in the file system.
+
+
+
+&nbsp;
+# Outputs
+
+
+&nbsp;
+# File Structure
+
+
+&nbsp;
+# Configuration and Settings
+
+
+&nbsp;
+# Testing
+
+
+&nbsp;
+# CI/CD Pipeline
+
+
+&nbsp;
+# Next Steps
 
 `TODO`:
 - [ ] Create diagrams
@@ -169,19 +915,25 @@ prediction = requests.post(
 - [ ] add docker image for model
 
 
+&nbsp;
+# License
+
+
+&nbsp;
+# Author
+
+
+
+
+
+----------------------
+
 > blockquote
 
 Markdown | Less | Pretty
 --- | --- | ---
 *Still* | `renders` | **nicely**
 1 | 2 | 3
-
-~~The world is flat.~~
-
-
-Here's a sentence with a footnote. [^1]
-
-[^1]: This is the footnote.
 
 
 <dl>

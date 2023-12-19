@@ -90,8 +90,7 @@ class TestMLPipeline(TestCase):
 
         # Load champion Model
         ml_registry = ModelRegistry(
-            n_candidates=Params.n_candidates,
-            local_registry=Params.local_registry
+            load_from_local_registry=Params.local_registry
         )
         
         champion = ml_registry.prod_model
@@ -114,6 +113,9 @@ class TestMLPipeline(TestCase):
         mock_output_path = os.path.join(
             'data_lake', 'datasets', 'mock_data', 'expected_inference.json'
         )
+
+        # with open(mock_output_path, "w") as f:
+        #     json.dump(prediction, f, indent=4)
 
         expected_prediction = json.load(open(mock_output_path))
 

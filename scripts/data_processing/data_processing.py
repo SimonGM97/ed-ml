@@ -24,7 +24,7 @@ def main(
 
     # Clean Raw Data
     DC = DataCleaner(df=raw_df.copy())
-    clean_df = DC.cleaner_pipeline(save=save)
+    clean_df = DC.run_cleaner_pipeline(save=save)
 
     # clean_df.loc[
     #     (clean_df['user_uuid'] == '13df535e-065c-4593-98ea-5b1e29015b7d') &
@@ -33,7 +33,7 @@ def main(
     
     # Prepare ML Datasets
     FE = FeatureEngineer(df=clean_df.copy())
-    ml_df = FE.data_enricher_pipeline(save=save)
+    ml_df = FE.run_feature_engineering_pipeline(save=save)
 
     # ml_df.loc[
     #     (ml_df['user_uuid'] == '13df535e-065c-4593-98ea-5b1e29015b7d') &

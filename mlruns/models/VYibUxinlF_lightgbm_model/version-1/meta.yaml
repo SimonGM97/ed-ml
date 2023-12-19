@@ -1,11 +1,11 @@
 aliases: []
-creation_timestamp: 1702504345625
+creation_timestamp: 1703013875193
 current_stage: Staging
-description: ''
-last_updated_timestamp: 1702504345633
+description: null
+last_updated_timestamp: 1703013875201
 name: VYibUxinlF_lightgbm_model
 run_id: bc23134466af4abbbe8de953084d77a4
-run_link: ''
+run_link: null
 source: file:///Users/simongarciamorillo/Library/CloudStorage/OneDrive-Personal/Documents/EdMachina/challenge/mlruns/176063670909512656/bc23134466af4abbbe8de953084d77a4/artifacts/VYibUxinlF_lightgbm_model
 status: READY
 status_message: null

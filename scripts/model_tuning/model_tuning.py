@@ -44,15 +44,6 @@ def main(
         deep_debug=False
     )
 
-    # Select Champion & Challengers
-    tuner.model_registry.update_model_stages(update_champion=True)
-
-    # Clean Registry
-    tuner.model_registry.clean_registry()
-
-    # Show Registry
-    print(tuner.model_registry)
-
 
 # .venv/bin/python scripts/model_tuning/model_tuning.py --max_evals 20
 if __name__ == '__main__':

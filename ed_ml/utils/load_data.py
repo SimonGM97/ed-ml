@@ -16,7 +16,7 @@ def filter_data(
         course_name = list(random.choice(df['course_name'].unique()))
 
     if course_name is not None:
-        df = df.loc[df['course_name'] == 'course_name']
+        df = df.loc[df['course_name'] == course_name]
 
     # Filter based on user_uuid
     if pick_random:

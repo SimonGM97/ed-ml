@@ -10,21 +10,32 @@ import shutil
 import time
 from pprint import pprint
 from typing import List, Dict, Tuple
+from tqdm import tqdm
 import warnings
 
 warnings.filterwarnings("ignore")
 
 
 class ModelRegistry:
+    """
+    Class designed to organize, manage & update model repositories in a centralized fashion. This includes:
+        - Tracking of development models throughout the mlflow tracking server.
+        - Registry of staging & production models in the mlflow model registry.
+        - Saving models in the file system (for backup purposes)
+    """
     
     def __init__(
         self,
-        n_candidates: int,
-        local_registry: bool = False
+        load_from_local_registry: bool = False
     ) -> None:
+        """
+        Initialize the ModelRegistry
+
+        :param `load_from_local_registry`: (bool) Wether or not to utilize the file system to load development,
+         staging & production models.
+        """
         # Define attributes
-        self.n_candidates: int = n_candidates
-        self.local: bool = local_registry
+        self.local: bool = load_from_local_registry
 
         # Load registry
         self.local_registry: Dict[str, List[str]] = json.load(
@@ -33,9 +44,19 @@ class ModelRegistry:
 
     def load_models(
         self,
-        model_ids: str = None,
+        model_ids: List[str] = None,
         stage: str = 'development'
     ) -> List[Model]:
+        """
+        Method that will load specified models.
+        
+        :param `model_ids`: (List[str]) Model IDs that will be loaded.
+            - Note that this is only required for loading models from the file system.
+        :param `stage`: (str) Stage from which to load models from.
+            - Note that this is only required for loading models from the mlflow model registry/tracking server.
+
+        :return: (List[Model]) List of Model instances with the loaded models.
+        """
         models: List[Model] = []
         if self.local:
             # Load from file system
@@ -87,6 +108,11 @@ class ModelRegistry:
 
     @property
     def dev_models(self) -> List[Model]:
+        """
+        Method for loading development models.
+
+        :return: (List[Model]) List of loaded development models.
+        """
         # Load Dev Models
         dev_models: List[Model] = self.load_models(
             model_ids=self.local_registry['development'],
@@ -100,6 +126,11 @@ class ModelRegistry:
     
     @property
     def staging_models(self) -> List[Model]:
+        """
+        Method for loading staging models.
+
+        :return: (List[Model]) List of loaded staging models.
+        """
         # Load Staging Models
         stage_models: List[Model] = self.load_models(
             model_ids=self.local_registry['staging'],
@@ -113,6 +144,11 @@ class ModelRegistry:
     
     @property
     def prod_model(self) -> Model:
+        """
+        Method for the production model.
+
+        :return: (Model) Production model.
+        """
         # Load Production Model (i.e.: champion Model)
         loaded_models = self.load_models(
             model_ids=self.local_registry['production'],
@@ -127,9 +163,12 @@ class ModelRegistry:
             
         return loaded_models[0]
             
-    def set_up_tracking_server(self):
+    def set_up_tracking_server(self) -> None:
+        """
+        Method that will locally host the mlflow tracking server on port 5050, for experiment tracking.
+        """
         print('Setting up local tracking server.')
-        # command = ['mlflow', 'ui', '--port', '5050']
+        # Host the mlflow tracking server
         command = ['mlflow', 'server', '--host', '0.0.0.0', '--port', '5050']
         subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         
@@ -140,7 +179,10 @@ class ModelRegistry:
         mlflow.set_tracking_uri(Params.tracking_url)        
         print('Finished!')
 
-    def register_models(self):
+    def register_models(self) -> None:
+        """
+        Method that will register staging & production models on the mlflow model registry.
+        """
         # Register Champion
         self.prod_model.register_model()
 
@@ -150,8 +192,22 @@ class ModelRegistry:
 
     def update_model_stages(
         self,
+        n_candidates: int,
         update_champion: bool = True
-    ):
+    ) -> None:
+        """
+        Method that will re-define model stages, applying the following logic:
+            - Top n development models will be promoted as "staging" models (also referred as "challenger" models),
+              based on their mean cross validation performance.
+            - The top staging model will compete with the production model (also referred as "champion" model), 
+              based on their test performance.
+
+        :param `n_candidates`: (int) Number of total challenger models whose test performance will be compared in 
+         order to determine the champion model.
+            - Note that overly increasing this number might eventually lead to overfitting on the test set.
+        :param `update_champion`: (bool) Wether or not to allow for competition of challenger and champion models.
+         If true, a challenger model could potentially be promoted to champion (production) status.
+        """
         # Degrade all models to development (except for champion)
         dev_models: List[Model] = self.dev_models + self.staging_models
         staging_models: List[Model] = []
@@ -165,7 +221,7 @@ class ModelRegistry:
         dev_models.sort(key=lambda model: model.val_score, reverse=True)
 
         # Find top n candidates
-        staging_candidates = dev_models[: self.n_candidates]
+        staging_candidates = dev_models[: n_candidates]
 
         for model in staging_candidates:
             # Test model
@@ -276,6 +332,12 @@ class ModelRegistry:
         self.save_local_registry()
     
     def clean_registry(self) -> None:
+        """
+        Method that will remove any "inactive" model or experiment from the file system, mlflow tracking
+        server and mlflow model registry.
+        An "inactive" model is defined as a model that cannot be tagged to any current development, staging 
+        or production model.
+        """
         # Clean file_system
         self.clean_file_system()
 
@@ -286,6 +348,9 @@ class ModelRegistry:
         self.clean_mlflow_registry()
 
     def clean_file_system(self) -> None:
+        """
+        Method that will remove any "inactive" model from the file system.
+        """
         # Retrieve Models
         models = (
             self.dev_models +
@@ -331,6 +396,9 @@ class ModelRegistry:
                 shutil.rmtree(subdir)
 
     def clean_tracking_server(self) -> None:
+        """
+        Method that will remove any "inactive" model from the mlflow tracking server.
+        """
         # Retrieve Models
         models = (
             self.dev_models +
@@ -353,6 +421,9 @@ class ModelRegistry:
                 mlflow.delete_run(run_id=run_id)
 
     def clean_mlflow_registry(self) -> None:
+        """
+        Method that will remove any "inactive" model from the mlflow model registry.
+        """
         # Retrieve Models
         models = (
             self.dev_models +
@@ -371,6 +442,9 @@ class ModelRegistry:
                 Params.ml_client.delete_registered_model(name=model_name)
 
     def save_local_registry(self) -> None:
+        """
+        Method that will save the self.local_regisry attribute in the file system.
+        """
         with open(Params.local_registry_path, "w") as f:
             json.dump(self.local_registry, f, indent=4)
 
@@ -379,7 +453,10 @@ class ModelRegistry:
         
         # Prod Model
         champion = self.prod_model
-        print(f'Production Model: {champion.model_id} [Test: {round(champion.test_score, 4)}, Validation: {round(champion.val_score, 4)}]')
+        if champion is not None:
+            print(f'Production Model: {champion.model_id} [Test: {round(champion.test_score, 4)}, Validation: {round(champion.val_score, 4)}]')
+        else:
+            print(f'[WARNING] loaded champion is None!.')
 
         # Staging Models
         for model in self.staging_models:

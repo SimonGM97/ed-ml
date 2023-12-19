@@ -23,8 +23,8 @@ class FeatureEngineer:
         """
         Initialize FeatureEngineer.
 
-        :param df: (pd.DataFrame) Input DataFrame.
-        :param load_dataset: (bool) Whether to load the dataset during initialization.
+        :param `df`: (pd.DataFrame) Input DataFrame.
+        :param `load_dataset`: (bool) Whether to load the dataset during initialization.
         """
         # Define self.df
         self.df: pd.DataFrame = df
@@ -37,6 +37,14 @@ class FeatureEngineer:
     def add_target_column(
         df: pd.DataFrame
     ) -> pd.DataFrame:
+        """
+        Method that will produce the target variable by assigning a 1 if the final grade is greater or equal to 4,
+        and a 0 if that is not the case.
+
+        :param `df`: (pd.DataFrame) DataFrame without target column.
+
+        :return: (pd.DataFrame) DataFrame with target column.
+        """
         # Define target column
         df[Params.target_column] = np.where(
             df['nota_final_materia'] >= 4, 1, 0
@@ -48,6 +56,26 @@ class FeatureEngineer:
     def add_timing_based_features(
         df: pd.DataFrame
     ) -> pd.DataFrame:
+        """
+        Method that will create features realted to the time at which the assignments were unlocked, submitted
+        and due at. The intent is to model & distinguish lazy students that usually prepare and submit assignments
+        near the deadline; compared to dedicated students that usually submit assignments with time to spare.
+
+        Features being created:
+            - hrs_to_do_assignment: total hours assigned to do an assignment (from unlock date until due date)
+            - hrs_taken_to_do_assignment: number of hours spent by the student to do the assignment (from unlock 
+              date until submittion date)
+            - rel_time_taken_to_do_assignment: the number of hours spent working on the exam, relative to the total
+              hours available to do the exam.
+            - hrs_before_due: number of spare hours that the student had when submitting the assignment (from 
+              submission date until due date).
+
+        Note that this method requires the transformation DataCleaner.allign_assignments() to have been ran.
+
+        :param `df`: (pd.DataFrame) DataFrame without timing based features.
+
+        :return: (pd.DataFrame) DataFrame with timing based features.
+        """
         # Add total hours to do
         df['hrs_to_do_assignment'] = np.where(
             df['ass_name'].notna(),
@@ -94,7 +122,29 @@ class FeatureEngineer:
         df: pd.DataFrame
     ) -> pd.DataFrame:
         """
-        Add features required for the expanding DataFrame.
+        Method that will calculate features required for a more seamingless calculation of cumulative features
+        that will be generated in the self.calculate_expanding_features() method.
+        
+        Features created:
+            - parciales_n: column containing a 1 if the student has taken a 'PRIMER PARCIAL(20)' or 
+              'SEGUNDO PARCIAL(20)' in that partition.
+            - nota_parciales: column containing the grade of the 'PRIMER PARCIAL(20)' or 'SEGUNDO PARCIAL(20)'
+              that was obtained in that partition.
+            - integradores_n: column containing a 1 if the student has taken a 'INTEGRADOR(30))' exam in that 
+              partition.
+            - nota_integradores: column containing the grade of the 'INTEGRADOR(30)' that was obtained in that 
+              partition.
+            - recuperatorios_n: column containing a 1 if the student has taken a 'RECUPERATORIO PRIMER PARCIAL(20)' 
+              or 'RECUPERATORIO SEGUNDO PARCIAL(20)' in that partition.
+            - nota_recuperatiorios: column containing the grade of the 'RECUPERATORIO PRIMER PARCIAL(20)' or 
+              'RECUPERATORIO SEGUNDO PARCIAL(20)' that was obtained in that partition.
+            - overall_parciales_n: column containing a 1 if the student has taken any exam in that partition.
+            - assignment_n: column containing a 1 if the student has submitted any assignment in that partition.
+            - assignment_zero: column that reflect if an assignment was graded with a 0.
+
+        :param `df`: (pd.DataFrame) DataFrame without intermediate features.
+
+        :return: (pd.DataFrame) DataFrame with intermediate features.
         """
         # Add column that tells wether or not an examen parcial was taken
         df['parciales_n'] = np.where(
@@ -172,15 +222,82 @@ class FeatureEngineer:
     @staticmethod
     def calculate_expanding_features(
         df: pd.DataFrame
-    ) -> None:
+    ) -> pd.DataFrame:
+        """
+        Method that will calculate aggregated features on an expanding DataFrame. This is designed so that the 
+        value of a feature calculated at a particular partition, is considering all information upto that 
+        partition.
+
+        Applied Transformations:
+            Exam related engineered features
+            - parciales_n:
+                - sum: count of exams taken, until that partition
+            - nota_parciales: 
+                - min: minimum grade obtained in an exam, until that partition.
+                - max: maximum grade obtained in an exam, until that partition.
+                - mean: mean grade obtained in an exam, until that partition.
+                - std: standard deviation of grades obtained in an exam, until that partition.
+            - integradores_n: 
+                - sum: count of integradores taken, until that partition
+            - nota_integradores:
+                - min: minimum grade obtained in an integrador exam, until that partition.
+                - max: maximum grade obtained in an integrador exam, until that partition.
+                - mean: mean grade obtained in an integrador exam, until that partition.
+                - std: standard deviation of grades obtained in an integrador exam, until that partition.
+            - recuperatorios_n:
+                - sum: count of make-up exams taken, until that partition.
+            - nota_recuperatorios:
+                - min: minimum grade obtained in a make-up exam, until that partition.
+                - max: maximum grade obtained in a make-up exam, until that partition.
+                - mean: mean grade obtained in a make-up exam, until that partition.
+                - std: standard deviation of grades obtained in a make-up exam, until that partition.
+            - overall_parciales_n:
+                - sum: count of all kinds of exams taken, until that partition.
+            - nota_overall:
+                - min: minimum grade obtained on all exams taken, until that partition.
+                - max: maximum grade obtained on all exams taken, until that partition.
+                - mean: mean grade obtained on all exams taken, until that partition.
+                - std: standard deviation of grades obtained on all exams taken, until that partition.
+
+            Assignment related engineered features
+            - assignment_n:
+                - sum: count of all assignments submitted, until that partition.
+            - score:
+                - min: minimum grade obtained on all assignments submitted, until that partition.
+                - max: maximum grade obtained on all assignments submitted, until that partition.
+                - mean: mean grade obtained on all assignments submitted, until that partition.
+                - std: standard deviation of grades obtained on all assignments submitted, until that 
+                  partition.
+            - assignment_zero:
+                - sum: count of all assignments submitted which were graded with a 0, until that partition.
+
+            Time related engineered features
+            - hrs_to_do_assignment:
+                - min: minimum available hours to complete an assignment, until that partition.
+                - max: maximum available hours to complete an assignment, until that partition.
+                - mean: mean available hours to complete an assignment, until that partition.
+                - std: standard deviation of available hours to complete an assignment, until that partition.
+            - hrs_taken_to_do_assignment:
+                - min: minimum hours taken to complete an assignment, until that partition.
+                - max: maximum hours taken to complete an assignment, until that partition.
+                - mean: mean hours taken to complete an assignment, until that partition.
+                - std: standard deviation of hours taken to complete an assignment, until that partition.
+            - rel_time_taken_to_do_assignment:
+                - min: minimum relative time taken to complete an assignment, until that partition.
+                - max: maximum relative time taken to complete an assignment, until that partition.
+                - mean: mean relative time taken to complete an assignment, until that partition.
+                - std: standard deviation of the relative time taken to complete an assignment, until that partition.
+            - hrs_before_due:
+                - min: minimum number of spare hours that the student had when submitting an assignment, until that partition.
+                - max: maximum number of spare hours that the student had when submitting an assignment, until that partition.
+                - mean: mean number of spare hours that the student had when submitting an assignment, until that partition.
+                - std: standard deviation of the number of spare hours that the student had when submitting an assignment, until that partition.
+
+        :param `df`: (pd.DataFrame) DataFrame without expanding features.
+
+        :return: (pd.DataFrame) DataFrame with expanding features.
+        """
         def first(col: pd.Series):
-            """
-            Return the first value of a Series.
-
-            :param col: (pd.Series) Input Series.
-
-            :return: The first value of the Series.
-            """
             return col.values[0]
         
         def rename_cols(col):
@@ -241,6 +358,15 @@ class FeatureEngineer:
     def remove_unuseful_obs(
         df: pd.DataFrame
     ) -> pd.DataFrame:
+        """
+        Method that will remove partitions until the first exam was taken or assignment was submitted.
+        The reason for removing observations until this point is so that ML models will have at least some 
+        useful information to make inferences & understand patterns.
+
+        :param `df`: (pd.DataFrame) DataFrame containing "unuseful" observations.
+
+        :return: (pd.DataFrame) DataFrame without "unuseful" observations.
+        """
         # Fill values required to remove unnecessary rows
         df.fillna(value={
             'assignment_n_sum': 0, 
@@ -255,10 +381,24 @@ class FeatureEngineer:
 
         return df
 
-    def data_enricher_pipeline(
+    def run_feature_engineering_pipeline(
         self,
         save: bool = False
     ) -> pd.DataFrame:
+        """
+        Method that executes the feature engineering pipeline, which will:
+            - Add target column
+            - Calculate timing based features
+            - Calculate intermediate features
+            - Calculate aggregated features on expanding DataFrame
+            - Remove unusefull observations
+            - Fill null observations
+            - Save engineered dataset
+
+        :param save: (bool) Whether to save the cleaned dataset.
+
+        :return: (pd.DataFrame) Cleaned DataFrame.
+        """
         # Add target column
         self.df = self.add_target_column(df=self.df)
 
@@ -284,8 +424,14 @@ class FeatureEngineer:
         return self.df
     
     def save_dataset(self):
+        """
+        Save the engineered dataset to a CSV file.
+        """
         print('\nSaving new engineered DataFrame.\n\n')
         self.df.to_csv(Params.ml_data_path)
 
     def load_dataset(self):
+        """
+        Load the engineered dataset to a CSV file.
+        """
         self.df = pd.read_csv(Params.ml_data_path, index_col=0)

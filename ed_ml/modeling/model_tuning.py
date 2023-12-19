@@ -11,6 +11,7 @@ from hyperopt.pyll.base import scope
 import pandas as pd
 import numpy as np
 import time
+from functools import partial
 from pprint import pprint
 from typing import List
 import warnings
@@ -19,7 +20,13 @@ warnings.filterwarnings("ignore")
 
 
 class ModelTuner:
+    """
+    Class designed to find the most performant classification ML models, leveraging hyperopt's TPE based
+    search engine to optimize both the model flavor (or algorithm) & set of hyperparameters in order 
+    to train robust models with strong generalization capabilities.
+    """
 
+    # Integer Serch Parameters
     int_parameters = [
         # random_forest
         'random_forest.n_estimators',
@@ -33,6 +40,7 @@ class ModelTuner:
         'lightgbm.num_leaves'
     ]
 
+    # Choice Search Parameters
     choice_parameters = {
         # random_forest
         'random_forest.max_features': ['1.0', 'sqrt'],
@@ -94,6 +102,27 @@ class ModelTuner:
         loss_threshold: float = None,
         min_performance: float = None
     ) -> None:
+        """
+        Initialize ModelTuner.
+
+        :param `algorithms`: (list) Model flavors to iterate over. 
+            - Currently available options: random_forest, lightgbm, xgboost.
+        :param `eval_metric`: (str) Name of the metric utilized to evaluate ML models over the validation set.
+            - Note: this is also the metric which will be optimized by the TPE algorithm.
+        :param `val_splits`: (int) Number of splits utilized in for cross validation of ML model candidates.
+        :param `train_test_ratio`: (float) Proportion of data to keep as the test set; relative to the complete
+         dataset.
+        :param `n_candidates`: (int) Number of development models that will be chosen as potential candidates.
+        :param `local_registry`: (bool) Wether or not to load models from the file system or MLflow Model Registry.
+        :param `max_evals`: (int) Number of maximum iterations that the hyperopt.fmin() function will be allowed to
+         search before finding the most performant candidates.
+        :param `timeout_mins`: (int) Number of minutes that the hyperopt.fmin() function will be allowed to run 
+         before finding the most performant candidates.
+        :param `loss_theshold`: (float) Theshold performance at which, if reached, the optimization algorithm will
+         sease searching for a better model.
+        :param `min_performance`: (float) Minimum performance required for a candidate model to be logged in the 
+         mlflow tracking server.
+        """
         # Define attributes
         self.algorithms = algorithms
         self.eval_metric = eval_metric
@@ -120,8 +149,7 @@ class ModelTuner:
         
         # Instanciate ModelRegistry
         self.model_registry: ModelRegistry = ModelRegistry(
-            n_candidates=self.n_candidates,
-            local_registry=local_registry
+            load_from_local_registry=local_registry
         )
 
         # Define dev_models
@@ -140,9 +168,18 @@ class ModelTuner:
         self, 
         parameters_list: list[dict],
         complete_parameters: bool = False,
-        choice_parameters: str = 'index', 
-        debug: bool = False
-    ):
+        choice_parameters: str = 'index'
+    ) -> List[dict]:
+        """
+        Method designed to interprete and complete the keys, values and indexes for each iteration of the search 
+        parameters; following expected input & output structure expected by hyperopt.
+
+        :param `parameters_list`: (list) List of parameters to standardize.
+        :param `complete_parameters`: (bool) Wether or not to complete any missing keys in the parameters.
+        :param `choice_parameters`: (str) Used to set how the choice parameters will be outputed.
+
+        :return: (pd.DataFrame) List of parameters with standardized structure.
+        """
         if choice_parameters not in ['index', 'values']:
             raise Exception(f'Invalid "choice_parameters": {choice_parameters}.\n\n')
 
@@ -207,7 +244,15 @@ class ModelTuner:
     def prepare_hyper_parameters(
         self,
         parameters: dict
-    ):
+    ) -> dict:
+        """
+        Method that standardizes the structure of hyper-parameters, so that it can be consumed while 
+        instanciating new ML classification models.
+
+        :param `parameters`: (dict) Parameters with hyper-parameters to standardize.
+
+        :return: (dict) Parameters with standardized hyper-parameters.
+        """
         hyper_param_choices = [d for d in self.model_type_choices if d['algorithm'] == parameters['algorithm']][0]
 
         parameters['hyper_parameters'] = {
@@ -227,7 +272,17 @@ class ModelTuner:
         self,
         parameters: dict,
         debug: bool = False
-    ):
+    ) -> dict:
+        """
+        Method designed to standardize the structure, complete required keys and interpret values 
+        of the set of parameters & hyperparameters that are being searched by the hyperopt TPE 
+        powered seach engine.
+
+        :param `parameters`: (dict) Parameters with raw structure, uncomplete keys & uninterpreted values.
+        :param `debug`: (bool) Wether or not to show input and output parameters for debugging purposes.
+
+        :return: (dict) Parameters with standardized structure, complete keys & interpreted values.
+        """
         if debug:
             t1 = time.time()
             print("parameters:\n"
@@ -240,8 +295,7 @@ class ModelTuner:
         parameters = self.parameter_configuration(
             parameters_list=[parameters],
             complete_parameters=False,
-            choice_parameters='values',
-            debug=False
+            choice_parameters='values'
         )[0]
 
         # Add version, stage & model_type
@@ -274,35 +328,54 @@ class ModelTuner:
         self, 
         parameters: dict,
         debug: bool = False
-    ):
-        try:
-            # Parameter configuration
-            parameters = self.prepare_parameters(
-                parameters=parameters,
-                debug=debug
-            )
+    ) -> dict:
+        """
+        Method defined as the objective function for the hyperopt's TPE based search engine; which will:
+            - Standardize, complete & interprete inputed parameters
+            - Leverage MLPipeline to build a ML classification model with the inputed parameters
+            - Log the resulting model in the mlflow tracking server, if the validation performance is over
+              a defined threshold.
+            - Output the validation performance (mean cross validation score) as the loss function.
 
-            # Run Model Build Pipeline
-            model: Model = self.ml_pipeline.build_pipeline(
-                ml_params=parameters,
-                eval_metric=self.eval_metric,
-                splits=self.val_splits,
-                debug=debug
-            )
-            
-            # Log dev model
-            if model.val_score >= self.min_performance:
-                model.log_model()
-            
-            # Return Loss
-            return {'loss': -model.val_score, 'status': STATUS_OK}
-        except Exception as e:
-            print(f'[WARNING] Skipping iteration.\n'
-                  f'Exception: {e}\n'
-                  f'Parameters:\n{parameters}\n\n')
-            return {'loss': np.inf, 'status': STATUS_OK}
+        :param `parameters`: (dict) Parameters with raw structure, uncomplete keys & uninterpreted values.
+        :param `debug`: (bool) Wether or not to show intermediate logs for debugging purposes.
 
-    def find_dev_models(self):
+        :return: (dict) Loss function with the validation performance of the ML classification model.
+        """
+        # try:
+        # Parameter configuration
+        parameters = self.prepare_parameters(
+            parameters=parameters,
+            debug=debug
+        )
+
+        # Run Model Build Pipeline
+        model: Model = self.ml_pipeline.build_pipeline(
+            ml_params=parameters,
+            eval_metric=self.eval_metric,
+            splits=self.val_splits,
+            debug=debug
+        )
+        
+        # Log dev model
+        if model.val_score >= self.min_performance:
+            model.log_model()
+        
+        # Return Loss
+        return {'loss': -model.val_score, 'status': STATUS_OK}
+        # except Exception as e:
+        #     print(f'[WARNING] Skipping iteration.\n'
+        #           f'Exception: {e}\n'
+        #           f'Parameters:\n{parameters}\n\n')
+        #     return {'loss': np.inf, 'status': STATUS_OK}
+
+    def find_dev_models(self) -> None:
+        """
+        Method that defines the top development models found by the search engine, by:
+            - Querying the top mlflow tracking server runs for each model flavor/algorithm, based on the mean
+              cross validation score.
+            - Deleting unperformant runs from the tracking server.
+        """
         self.dev_models = []
         for algorithm in self.algorithms:
             # Query algorithm runs & sort by validation performance
@@ -345,7 +418,12 @@ class ModelTuner:
     def evaluate_dev_models(
         self,
         debug: bool = False
-    ):
+    ) -> None:
+        """
+        Method that evaluates the development models on the test set, defined in the MLPipeline.
+
+        :param `debug`: (bool) Wether or not to show self.dev_models performances logs for debugging purposes.
+        """
         for model in self.dev_models:
             # Evaluate model on test set & find model.test_score
             model.evaluate_test(
@@ -369,13 +447,38 @@ class ModelTuner:
     def run(
         self,
         ml_df: pd.DataFrame,
+        use_warm_start: bool = True,
         soft_debug: bool = False, 
         deep_debug: bool = False
-    ):
+    ) -> None:
+        """
+        Main method that orchestrates the processes required to track, train and evaluate performant
+        development models.
+
+        This method will:
+            - Set up the mlflow tracking server (currently hosted locally).
+            - Define a balanced training set (which will be later divided in the cross validation section).
+            - Define a test set (unbalanced, in order to accurately depict the real group distributions).
+            - (Optional) Set up a "warm start" for the search engine, leveraging a performant solution found 
+              on a previous run.
+                - Note: utilizing warm start will find performant solutions potentially from the first iteration,
+                  but the search algorithm is predisposed to find local minima.
+            - Run the hyperopt's TPE based search engine.
+            - Load the most performant development models, based on the mean cross validation score (on the 
+              validation set).
+            - Evaluate the development models on the unbalanced test set.
+            - Save development models.
+        
+        :param `ml_df`: (pd.DataFrame) Engineered DataFrame outputted by the FeatureEngineer class.
+        :param `use_warm_start`: (bool) Wether or not to utilize the optional warm start functionality.
+        :param `soft_debug`: (bool) Wether or not to show general intermediate logs for debugging purposes.
+        :param `deep_debug`: (bool) Wether or not to show intermediate logs in the objective function, for 
+         debugging purposes.
+        """
         if deep_debug:
             soft_debug = True
 
-        # Set up local tracking server
+        # Set up local mlflow tracking server
         self.model_registry.set_up_tracking_server()
 
         # Prepare Datasets
@@ -386,12 +489,15 @@ class ModelTuner:
 
         # Define warm start
         warm_models = [model for model in self.dev_models if model.algorithm in self.algorithms]
-        if len(warm_models) > 0 and warm_models[0].warm_start_params is not None:
+        if (
+            use_warm_start
+            and len(warm_models) > 0 
+            and warm_models[0].warm_start_params is not None
+        ):
             best_parameters_to_evaluate = self.parameter_configuration(
                 parameters_list=[warm_models[0].warm_start_params],
                 complete_parameters=True,
-                choice_parameters='index',
-                debug=soft_debug
+                choice_parameters='index'
             )
             trials = generate_trials_to_calculate(best_parameters_to_evaluate)
 
@@ -404,9 +510,15 @@ class ModelTuner:
         
         # Run hyperopt searching engine
         print(f'\n\nTuning Models (max_evals: {self.max_evals}):\n')
+
+        fmin_objective = partial(
+            self.objective,
+            debug=deep_debug
+        )
+
         try:
             result = fmin(
-                fn=self.objective,
+                fn=fmin_objective,
                 space=self.search_space,
                 algo=tpe.suggest,
                 max_evals=self.max_evals,
@@ -432,11 +544,14 @@ class ModelTuner:
         for model in self.dev_models:
             model.save()
         
-        # Add Dev Models to local model registry
+        # Add Dev Models to model local IDs registry
         self.model_registry.local_registry['development'] = [
             m.model_id for m in self.dev_models
             if m.stage == 'development'
         ]
+
+        # Save model local IDs registry
+        self.model_registry.save_local_registry()
 
     def __repr__(self) -> str:
         i = 1

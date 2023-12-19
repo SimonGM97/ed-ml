@@ -1,0 +1,15 @@
+artifact_uri: file:///Users/simongarciamorillo/Library/CloudStorage/OneDrive-Personal/Documents/EdMachina/challenge/mlruns/176063670909512656/19aefb5d2b394a9cad91c05b730ebeb0/artifacts
+end_time: 1703013874677
+entry_point_name: ''
+experiment_id: '176063670909512656'
+lifecycle_stage: active
+run_id: 19aefb5d2b394a9cad91c05b730ebeb0
+run_name: resilient-bee-646
+run_uuid: 19aefb5d2b394a9cad91c05b730ebeb0
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1702579795754
+status: 3
+tags: []
+user_id: simongarciamorillo

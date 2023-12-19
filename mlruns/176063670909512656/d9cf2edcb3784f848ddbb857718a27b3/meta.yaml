@@ -1,0 +1,15 @@
+artifact_uri: file:///Users/simongarciamorillo/Library/CloudStorage/OneDrive-Personal/Documents/EdMachina/challenge/mlruns/176063670909512656/d9cf2edcb3784f848ddbb857718a27b3/artifacts
+end_time: 1703013868618
+entry_point_name: ''
+experiment_id: '176063670909512656'
+lifecycle_stage: active
+run_id: d9cf2edcb3784f848ddbb857718a27b3
+run_name: sneaky-roo-760
+run_uuid: d9cf2edcb3784f848ddbb857718a27b3
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1702561937196
+status: 3
+tags: []
+user_id: simongarciamorillo

@@ -1,0 +1,14 @@
+aliases: []
+creation_timestamp: 1703013874912
+current_stage: Staging
+description: null
+last_updated_timestamp: 1703013874919
+name: UXinNeTHIo_random_forest_model
+run_id: c39889d0ce8d4d8bb9429c394d23ef95
+run_link: null
+source: file:///Users/simongarciamorillo/Library/CloudStorage/OneDrive-Personal/Documents/EdMachina/challenge/mlruns/176063670909512656/c39889d0ce8d4d8bb9429c394d23ef95/artifacts/UXinNeTHIo_random_forest_model
+status: READY
+status_message: null
+storage_location: file:///Users/simongarciamorillo/Library/CloudStorage/OneDrive-Personal/Documents/EdMachina/challenge/mlruns/176063670909512656/c39889d0ce8d4d8bb9429c394d23ef95/artifacts/UXinNeTHIo_random_forest_model
+user_id: null
+version: 1

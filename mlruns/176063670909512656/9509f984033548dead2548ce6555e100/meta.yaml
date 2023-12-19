@@ -1,0 +1,15 @@
+artifact_uri: file:///Users/simongarciamorillo/Library/CloudStorage/OneDrive-Personal/Documents/EdMachina/challenge/mlruns/176063670909512656/9509f984033548dead2548ce6555e100/artifacts
+end_time: 1703013871062
+entry_point_name: ''
+experiment_id: '176063670909512656'
+lifecycle_stage: active
+run_id: 9509f984033548dead2548ce6555e100
+run_name: monumental-quail-641
+run_uuid: 9509f984033548dead2548ce6555e100
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1702563351753
+status: 3
+tags: []
+user_id: simongarciamorillo

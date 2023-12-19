@@ -22,13 +22,13 @@ class TestDataProcessing(TestCase):
         DC = DataCleaner(df=mock_raw_df)
         
         # Run cleaner_pipeline process with mocked input
-        mock_clean_df = DC.cleaner_pipeline()
+        mock_clean_df = DC.run_cleaner_pipeline()
 
         # Instanciate FeatureEngineer with mock_cleaned_df
         FE = FeatureEngineer(df=mock_clean_df)
 
         # Run cleaner_pipeline process with mocked input
-        mock_ml_df = FE.data_enricher_pipeline()
+        mock_ml_df = FE.run_feature_engineering_pipeline()
 
         # Load expected output
         mock_output_path = os.path.join(

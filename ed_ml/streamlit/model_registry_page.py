@@ -9,8 +9,7 @@ import numpy as np
 def build_model_registry_page():
     # Instanciate Registry
     registry = ModelRegistry(
-        n_candidates=Params.n_candidates,
-        local_registry=Params.local_registry
+        load_from_local_registry=Params.local_registry
     )
 
     # Load Models    

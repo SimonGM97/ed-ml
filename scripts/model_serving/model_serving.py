@@ -40,8 +40,7 @@ def predict():
 if __name__ == '__main__':
     # Load champion Model
     ml_registry = ModelRegistry(
-        n_candidates=Params.n_candidates,
-        local_registry=Params.local_registry
+        load_from_local_registry=Params.local_registry
     )
     
     champion = ml_registry.prod_model

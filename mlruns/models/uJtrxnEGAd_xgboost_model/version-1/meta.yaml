@@ -1,0 +1,14 @@
+aliases: []
+creation_timestamp: 1702563521181
+current_stage: Staging
+description: ''
+last_updated_timestamp: 1702563521190
+name: uJtrxnEGAd_xgboost_model
+run_id: f1102756fabd47baa2b7d120a1e44d2b
+run_link: ''
+source: file:///Users/simongarciamorillo/Library/CloudStorage/OneDrive-Personal/Documents/EdMachina/challenge/mlruns/176063670909512656/f1102756fabd47baa2b7d120a1e44d2b/artifacts/uJtrxnEGAd_xgboost_model
+status: READY
+status_message: null
+storage_location: file:///Users/simongarciamorillo/Library/CloudStorage/OneDrive-Personal/Documents/EdMachina/challenge/mlruns/176063670909512656/f1102756fabd47baa2b7d120a1e44d2b/artifacts/uJtrxnEGAd_xgboost_model
+user_id: null
+version: 1

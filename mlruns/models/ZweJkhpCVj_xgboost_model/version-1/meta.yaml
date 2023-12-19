@@ -1,0 +1,14 @@
+aliases: []
+creation_timestamp: 1703013875161
+current_stage: Staging
+description: null
+last_updated_timestamp: 1703013875168
+name: ZweJkhpCVj_xgboost_model
+run_id: 4e14fe154f1a44af9174c7e45ad09d54
+run_link: null
+source: file:///Users/simongarciamorillo/Library/CloudStorage/OneDrive-Personal/Documents/EdMachina/challenge/mlruns/176063670909512656/4e14fe154f1a44af9174c7e45ad09d54/artifacts/ZweJkhpCVj_xgboost_model
+status: READY
+status_message: null
+storage_location: file:///Users/simongarciamorillo/Library/CloudStorage/OneDrive-Personal/Documents/EdMachina/challenge/mlruns/176063670909512656/4e14fe154f1a44af9174c7e45ad09d54/artifacts/ZweJkhpCVj_xgboost_model
+user_id: null
+version: 1

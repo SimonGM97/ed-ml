@@ -1,0 +1,14 @@
+aliases: []
+creation_timestamp: 1703013875080
+current_stage: Staging
+description: null
+last_updated_timestamp: 1703013875087
+name: WgNnpeoqNN_random_forest_model
+run_id: 6514e457260d4f7d9f876254dd5e62f0
+run_link: null
+source: file:///Users/simongarciamorillo/Library/CloudStorage/OneDrive-Personal/Documents/EdMachina/challenge/mlruns/176063670909512656/6514e457260d4f7d9f876254dd5e62f0/artifacts/WgNnpeoqNN_random_forest_model
+status: READY
+status_message: null
+storage_location: file:///Users/simongarciamorillo/Library/CloudStorage/OneDrive-Personal/Documents/EdMachina/challenge/mlruns/176063670909512656/6514e457260d4f7d9f876254dd5e62f0/artifacts/WgNnpeoqNN_random_forest_model
+user_id: null
+version: 1

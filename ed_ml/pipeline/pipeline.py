@@ -14,13 +14,28 @@ warnings.filterwarnings("ignore")
 
 
 class MLPipeline:
+    """
+    Class designed to standardize the main modelling processes:
+        - Preparing machine learning datasets.
+        - Running a model building pipeline.
+        - Running an inference pipeline.
+        - Running an model updating pipeline.
+    """
 
     def __init__(self) -> None:
-        # Datasets
+        """
+        Instanciate MLPipeline
+        """
+        # Train features
         self.X_train: pd.DataFrame = None
+        
+        # Test features
         self.X_test: pd.DataFrame = None
 
+        # Train target (balanced)
         self.y_train: pd.DataFrame = None
+
+        # Test target (unbalanced)
         self.y_test: pd.DataFrame = None
 
     def prepare_datasets(
@@ -29,6 +44,20 @@ class MLPipeline:
         train_test_ratio: float,
         debug: bool = False
     ) -> None:
+        """
+        Method that will prepare machine learning datasets, by:
+            - Randomly selecting train & test datasets.
+            - Balancing the train datasets (X_train & y_train) with an oversampling technique
+
+        Note that the test datasets (X_test & y_test) are purposely kept unbalanced to more accurately
+        depict the real life group proportions; thus achieving a better estimate of the model performance
+        in a production environment. 
+
+        :param `ml_df`: (pd.DataFrame) Engineered DataFrame outputted by the FeatureEngineer class.
+        :param `train_test_ratio`: (float) Proportion of data to keep as the test set; relative to the complete
+         dataset.
+        :param `debug`: (bool) Wether or not to show dataset balances for debugging purposes.
+        """
         # Keep numerical features
         ml_df = ml_df.select_dtypes(include=['number'])
 
@@ -61,6 +90,19 @@ class MLPipeline:
         splits: int,
         debug: bool = False
     ) -> Model:
+        """
+        Method that will run the model building pipeline, by:
+            - Instanciateing the model.
+            - Evaluating the cross validation score over the train datasets.
+            - Re-fit the model with the complete train datasets.
+
+        :param `ml_params`: (dict) Parameters required when instanciating the Model class.
+        :param `eval_metric`: (str) Name of the metric utilized to evaluate ML model over the validation set.
+        :param `splits`: (int) Number of splits utilized in for cross validation of ML model.
+        :param `debug`: (bool) Wether or not to show intermediate results, for debugging purposes.
+
+        :return: (Model) Fitted Model instance.
+        """
         # Instanciate Model
         model = Model(**ml_params)
 
@@ -88,27 +130,36 @@ class MLPipeline:
         self,
         model: Model,
         raw_df: pd.DataFrame
-    ):
+    ) -> dict:
+        """
+        Method that will run the inference pipeline, by:
+            - Cleaning new raw datasets.
+            - Calculating engineered datasets.
+            - Extracting a new X dataset.
+            - Performing new probabilistic predictions.
+
+        :param `model`: (Model) Instance from class Model utilized to infer new predictions.
+        :param `raw_df`: (pd.DataFrame) New raw observations to make inferences on.
+        """
         # Prepare raw_df
         if Params.target_column not in raw_df.columns:
             raw_df[Params.target_column] = np.nan
 
         # Clean Raw Data
         DC = DataCleaner(df=raw_df)
-        clean_df = DC.cleaner_pipeline()
+        clean_df = DC.run_cleaner_pipeline()
         
         # Prepare ML Datasets
         FE = FeatureEngineer(df=clean_df)
-        ml_df = FE.data_enricher_pipeline()
+        ml_df = FE.run_feature_engineering_pipeline()
 
+        # Keep only the latest partition for each new inference
         ml_df: pd.DataFrame = (
             ml_df
             .groupby(['user_uuid', 'course_uuid'])
             .apply(lambda df: df.loc[df['particion'].idxmax()])
+            .select_dtypes(include=['number'])
         )
-
-        # Keep numerical features
-        ml_df = ml_df.select_dtypes(include=['number'])
         
         # Extract X
         X = ml_df.drop([Params.target_column], axis=1)
@@ -128,8 +179,42 @@ class MLPipeline:
 
         return ml_df
 
-    def evaluate_pipeline(
+    def updating_pipeline(
         self,
-        model: Model
-    ):
-        pass
+        model: Model,
+        eval_metric: str,
+        refit_model: bool = False,
+        find_new_shap_values: bool = False
+    ) -> Model:
+        """
+        Method that will run the model updating pipeline, by:
+            - (Optionally) Re-fitting model on new train datasets.
+            - Evaluating model on test set & update test performance scores.
+            - Calculating feature importance.
+        
+        :param `model`: (Model) Instance from class Model that will be updated.
+        :param `eval_metric`: (str) Name of the metric utilized to evaluate ML model over the test set.
+        :param `refit_model`: (bool) Wether or not to re-fit the inputed model with train datasets.
+        :param `find_new_shap_values`: (bool) Wether or not to calculate new shaply values.
+        """
+        # Refit ml model (if specified)
+        if refit_model: 
+            model.fit(
+                y_train=self.y_train,
+                X_train=self.X_train
+            )
+        
+        # Evaluate test performance
+        model.evaluate_test(
+            X_test=self.X_test,
+            y_test=self.y_test,
+            eval_metric=eval_metric
+        )
+
+        # Find Model feature importance
+        model.find_feature_importance(
+            X_test=self.X_test,
+            find_new_shap_values=find_new_shap_values
+        )
+
+        return model
