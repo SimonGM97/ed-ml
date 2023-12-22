@@ -1,0 +1,14 @@
+aliases: []
+creation_timestamp: 1703260321534
+current_stage: Staging
+description: null
+last_updated_timestamp: 1703260321544
+name: oTHcTQzzWi_xgboost_model
+run_id: d8c78e72640f44ec844bec47223975d5
+run_link: null
+source: file:///Users/simongarciamorillo/Library/CloudStorage/OneDrive-Personal/Documents/EdMachina/challenge/mlruns/176063670909512656/d8c78e72640f44ec844bec47223975d5/artifacts/oTHcTQzzWi_xgboost_model
+status: READY
+status_message: null
+storage_location: file:///Users/simongarciamorillo/Library/CloudStorage/OneDrive-Personal/Documents/EdMachina/challenge/mlruns/176063670909512656/d8c78e72640f44ec844bec47223975d5/artifacts/oTHcTQzzWi_xgboost_model
+user_id: null
+version: 1

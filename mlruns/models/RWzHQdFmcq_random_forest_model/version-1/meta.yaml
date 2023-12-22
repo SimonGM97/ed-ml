@@ -1,0 +1,14 @@
+aliases: []
+creation_timestamp: 1703260324274
+current_stage: Staging
+description: null
+last_updated_timestamp: 1703260324281
+name: RWzHQdFmcq_random_forest_model
+run_id: 250c76798fee4cf991e72c11c576121d
+run_link: null
+source: file:///Users/simongarciamorillo/Library/CloudStorage/OneDrive-Personal/Documents/EdMachina/challenge/mlruns/176063670909512656/250c76798fee4cf991e72c11c576121d/artifacts/RWzHQdFmcq_random_forest_model
+status: READY
+status_message: null
+storage_location: file:///Users/simongarciamorillo/Library/CloudStorage/OneDrive-Personal/Documents/EdMachina/challenge/mlruns/176063670909512656/250c76798fee4cf991e72c11c576121d/artifacts/RWzHQdFmcq_random_forest_model
+user_id: null
+version: 1

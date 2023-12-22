@@ -1,0 +1,14 @@
+aliases: []
+creation_timestamp: 1703207784939
+current_stage: Staging
+description: null
+last_updated_timestamp: 1703207784947
+name: FCaBYVuvFk_random_forest_model
+run_id: ecae46a9b24b44e6b878ad130164be32
+run_link: null
+source: file:///Users/simongarciamorillo/Library/CloudStorage/OneDrive-Personal/Documents/EdMachina/challenge/mlruns/176063670909512656/ecae46a9b24b44e6b878ad130164be32/artifacts/FCaBYVuvFk_random_forest_model
+status: READY
+status_message: null
+storage_location: file:///Users/simongarciamorillo/Library/CloudStorage/OneDrive-Personal/Documents/EdMachina/challenge/mlruns/176063670909512656/ecae46a9b24b44e6b878ad130164be32/artifacts/FCaBYVuvFk_random_forest_model
+user_id: null
+version: 1

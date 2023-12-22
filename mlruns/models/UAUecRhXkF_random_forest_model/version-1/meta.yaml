@@ -1,0 +1,14 @@
+aliases: []
+creation_timestamp: 1703260320225
+current_stage: Staging
+description: null
+last_updated_timestamp: 1703260320233
+name: UAUecRhXkF_random_forest_model
+run_id: 6e7a4a4a83394c5da17c330b71f3f80b
+run_link: null
+source: file:///Users/simongarciamorillo/Library/CloudStorage/OneDrive-Personal/Documents/EdMachina/challenge/mlruns/176063670909512656/6e7a4a4a83394c5da17c330b71f3f80b/artifacts/UAUecRhXkF_random_forest_model
+status: READY
+status_message: null
+storage_location: file:///Users/simongarciamorillo/Library/CloudStorage/OneDrive-Personal/Documents/EdMachina/challenge/mlruns/176063670909512656/6e7a4a4a83394c5da17c330b71f3f80b/artifacts/UAUecRhXkF_random_forest_model
+user_id: null
+version: 1

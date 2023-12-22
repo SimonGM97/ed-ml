@@ -1,0 +1,15 @@
+artifact_uri: file:///Users/simongarciamorillo/Library/CloudStorage/OneDrive-Personal/Documents/EdMachina/challenge/mlruns/176063670909512656/7b9828a5a04842bd97ad0117e4ff1a90/artifacts
+end_time: 1703260327076
+entry_point_name: ''
+experiment_id: '176063670909512656'
+lifecycle_stage: active
+run_id: 7b9828a5a04842bd97ad0117e4ff1a90
+run_name: smiling-snipe-458
+run_uuid: 7b9828a5a04842bd97ad0117e4ff1a90
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1703192314291
+status: 3
+tags: []
+user_id: simongarciamorillo

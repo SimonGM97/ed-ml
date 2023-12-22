@@ -22,6 +22,10 @@ class Params:
 
     # Modeling
     model_attr_path: str
+    pipeline_data_path: str
+
+    balance_train: bool
+    balance_method: str
 
     algorithms: str
     eval_metric: str
@@ -45,13 +49,13 @@ class Params:
     inference_path: str
     course_name: str
     user_uuids: list
-    course_uuids: list
     particion: int
     pick_random: bool
 
     # Updating
     refit_model: bool
     find_new_shap_values: bool
+    optimize_cutoff: bool
 
     # Default
     raw_df: str
@@ -93,6 +97,14 @@ class Params:
             if as_type == list:
                 return param.split(', ')
             
+            # Dict
+            if as_type == dict:
+                # {1: 0.6, 0: 0.4}
+                pairs = param[1: -1].split(', ')
+                keys = [int(p.split(': ')[0]) for p in pairs]
+                vals = [float(p.split(': ')[1]) for p in pairs]
+                return dict(zip(keys, vals))
+            
             raise Exception(f'Invalid "as_type" parameter: {as_type}.\n\n')
             
         if cls.initialized:
@@ -117,6 +129,11 @@ class Params:
 
         # Access parameters from Modeling
         cls.model_attr_path: str = read_param('Modeling', 'model_attr_path', str)
+        cls.pipeline_data_path: str = read_param('Modeling', 'pipeline_data_path', str)
+
+        cls.balance_train: bool = read_param('Modeling', 'balance_train', bool)
+        cls.balance_method: str = read_param('Modeling', 'balance_method', str)
+        cls.class_weight: dict = read_param('Modeling', 'class_weight', dict)
 
         cls.algorithms: str = read_param('Modeling', 'algorithms', str)
         cls.eval_metric: str = read_param('Modeling', 'eval_metric', str)
@@ -149,19 +166,19 @@ class Params:
         # Access parameters from Inference
         cls.request_url: str = read_param('Inference', 'request_url', str)
         cls.inference_path: str = read_param('Inference', 'inference_path', str)
-        cls.course_name: str = read_param('Inference', 'course_name', str)
-        cls.user_uuids: list = read_param('Inference', 'user_uuids', list)
-        cls.course_uuids: list = read_param('Inference', 'course_uuids', list)
-        cls.particion: int = read_param('Inference', 'particion', int)
-        cls.pick_random: bool = read_param('Inference', 'pick_random', bool)
 
         # Access parameters from Updating
         cls.refit_model: bool = read_param('Updating', 'refit_model', bool)
         cls.find_new_shap_values: bool = read_param('Updating', 'find_new_shap_values', bool)
+        cls.optimize_cutoff: bool = read_param('Updating', 'optimize_cutoff', bool)
 
         # Access parameters from Default
         cls.raw_df: str = read_param('Default', 'raw_df', str)
         cls.save: bool = read_param('Default', 'save', bool)
+        cls.course_name: str = read_param('Default', 'course_name', str)
+        cls.user_uuids: list = read_param('Default', 'user_uuids', list)
+        cls.particion: int = read_param('Default', 'particion', int)
+        cls.pick_random: bool = read_param('Default', 'pick_random', bool)
 
 
 # Initialize Params

@@ -1,0 +1,15 @@
+artifact_uri: file:///Users/simongarciamorillo/Library/CloudStorage/OneDrive-Personal/Documents/EdMachina/challenge/mlruns/176063670909512656/9dabde679f5e45ababfdc6947ae33506/artifacts
+end_time: 1703260328505
+entry_point_name: ''
+experiment_id: '176063670909512656'
+lifecycle_stage: active
+run_id: 9dabde679f5e45ababfdc6947ae33506
+run_name: luxuriant-eel-977
+run_uuid: 9dabde679f5e45ababfdc6947ae33506
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1703192008999
+status: 3
+tags: []
+user_id: simongarciamorillo

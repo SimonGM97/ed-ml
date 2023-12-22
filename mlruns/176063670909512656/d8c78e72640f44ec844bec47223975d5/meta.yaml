@@ -1,0 +1,15 @@
+artifact_uri: file:///Users/simongarciamorillo/Library/CloudStorage/OneDrive-Personal/Documents/EdMachina/challenge/mlruns/176063670909512656/d8c78e72640f44ec844bec47223975d5/artifacts
+end_time: 1703260321511
+entry_point_name: ''
+experiment_id: '176063670909512656'
+lifecycle_stage: active
+run_id: d8c78e72640f44ec844bec47223975d5
+run_name: legendary-panda-297
+run_uuid: d8c78e72640f44ec844bec47223975d5
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1703085086780
+status: 3
+tags: []
+user_id: simongarciamorillo

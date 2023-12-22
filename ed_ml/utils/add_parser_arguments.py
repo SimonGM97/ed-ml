@@ -19,14 +19,23 @@ ARGS = {
         'max_evals',
         'timeout_mins',
         'loss_threshold',
-        'min_performance'
+        'min_performance',
+        'balance_train',
+        'balance_method'
     ],
     'inference.py': [
         'course_name',
         'user_uuids',
-        'course_uuids',
         'particion',
         'pick_random'
+    ],
+    'model_updating.py': [
+        'eval_metric',
+        'refit_model',
+        'optimize_cutoff',
+        'find_new_shap_values',
+        'local_registry',
+        'n_candidates'
     ]
 }
 

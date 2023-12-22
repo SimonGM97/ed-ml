@@ -11,7 +11,9 @@ from sklearn.metrics import (
     precision_score, 
     recall_score, 
     roc_auc_score,
-    accuracy_score
+    accuracy_score,
+    confusion_matrix,
+    roc_curve
 )
 
 import mlflow
@@ -20,6 +22,7 @@ import joblib
 
 import pandas as pd
 import numpy as np
+from scipy.special import expit
 
 import secrets
 import string
@@ -53,6 +56,7 @@ class Model:
 
         # Model Parameters
         'hyper_parameters',
+        'cutoff',
 
         # Feature Importance
         'shap_values',
@@ -64,6 +68,12 @@ class Model:
         'recall_score',
         'roc_auc_score',
         'accuracy_score',
+
+        'confusion_matrix',
+        'fpr', 
+        'tpr',
+        'thresholds',
+
         'cv_scores',
         'test_score'
     ]
@@ -80,7 +90,8 @@ class Model:
         version: int = 1,
         stage: str = 'staging',
         algorithm: str = None,
-        hyper_parameters: dict = {}
+        hyper_parameters: dict = {},
+        cutoff: float = 0.5
     ) -> None:
         """
         Initialize Model.
@@ -92,6 +103,8 @@ class Model:
         :param `algorithm`: (str) Also known as model flavor. Current options are "random_forest", "lightgbm" 
          & "xgboost".
         :param `hyper_parameters`: (dict) Dictionart containing key-value pairs of the model hyper-parameters.
+        :param `cutoff`: (float) Probability threshold utilized within the `model.predict()` method to infer 
+         if a new observation will classified as "Pass" or "Fail".
         """
         # General Parameters
         self.algorithm = algorithm
@@ -111,6 +124,8 @@ class Model:
         self.hyper_parameters = self.correct_hyper_parameters(hyper_parameters)
         if 'max_features' in self.hyper_parameters and self.hyper_parameters['max_features'] == '1.0':
             self.hyper_parameters['max_features'] = 1.0
+
+        self.cutoff = cutoff
         
         # Load Parameters
         self.model: RandomForestClassifier or XGBClassifier or LGBMClassifier = None
@@ -121,11 +136,16 @@ class Model:
         self.recall_score: float = 0
         self.roc_auc_score: float = 0
         self.accuracy_score: float = 0
+
+        self.confusion_matrix: np.ndarray = None
+        self.fpr: np.ndarray = None 
+        self.tpr: np.ndarray = None 
+        self.thresholds: np.ndarray = None 
         
-        self.cv_scores: np.ndarray = np.ndarray([])
+        self.cv_scores: np.ndarray = np.array([])
         self.test_score: float = 0
 
-        self.feature_importance_df: pd.DataFrame = pd.DataFrame(columns=['feature', 'shap_value'])
+        self.feature_importance_df: pd.DataFrame = pd.DataFrame(columns=['feature', 'importance'])
         self.importance_method: str = None
         self.shap_values: np.ndarray = None
     
@@ -189,6 +209,11 @@ class Model:
         return {
             'model_id': self.model_id,
             'fitted': self.fitted,
+            'cutoff': self.cutoff,
+            'confusion_matrix': self.confusion_matrix,
+            'fpr': self.fpr,
+            'tpr': self.tpr,
+            'thresholds': self.thresholds,
             'cv_scores': self.cv_scores,
             'feature_importance_df': self.feature_importance_df
         }
@@ -277,6 +302,7 @@ class Model:
         """
         if self.algorithm == 'random_forest':
             hyper_parameters.update(**{
+                'class_weight': Params.class_weight,
                 'oob_score': False,
                 'n_jobs': -1,
                 'random_state': 23111997
@@ -284,6 +310,7 @@ class Model:
 
         elif self.algorithm == 'lightgbm':
             hyper_parameters.update(**{
+                "scale_pos_weight": Params.class_weight[1]/Params.class_weight[0],
                 "importance_type": 'split',
                 "random_state": 23111997,
                 "verbose": -1,
@@ -292,6 +319,7 @@ class Model:
 
         elif self.algorithm == 'xgboost':
             hyper_parameters.update(**{
+                "scale_pos_weight": Params.class_weight[1]/Params.class_weight[0],
                 "verbosity": 0,
                 "use_rmm": True,
                 "device": 'cuda', # 'cpu', 'cuda' # cuda -> GPU
@@ -367,6 +395,56 @@ class Model:
         # Update Last Fitting Date
         self.last_fitting_date = y_train.index[-1]
 
+    def predict(
+        self,
+        X: pd.DataFrame,
+        cutoff: float = None
+    ) -> np.ndarray:
+        """
+        Method for realizing new category inferences, based on the cutoff and the predicted
+        probability.
+
+        :param `X`: (pd.DataFrame) New features to make inferences on.
+        :param `cutoff`: (float) Probability threshold at which to infer a class 1.
+            - Note: if None, cutoff is set to the self.cutoff value.
+
+        :return: (np.ndarray) New category inferences.
+        """
+        # Set up cutoff
+        if cutoff is None:
+            cutoff = self.cutoff
+
+        # Predict probabilities
+        y_score = self.predict_proba(X=X)
+
+        # Define class based on the self.cutoff
+        y_pred = np.where(y_score > cutoff, 1, 0)
+
+        # Return predictions
+        return y_pred
+    
+    def predict_proba(
+        self,
+        X: pd.DataFrame
+    ) -> np.ndarray:
+        """
+        Method for realizing new probabilistic inferences.
+
+        :param `X`: (pd.DataFrame) New features to make inferences on.
+
+        :return: (np.ndarray) New probabilistic inferences.
+        """
+        y_score = self.model.predict_proba(X.values.astype(float))[:, 1]
+
+        if (
+            self.algorithm == 'xgboost' 
+            and 'objective' in self.hyper_parameters.keys() 
+            and self.hyper_parameters['objective'] == 'binary:logitraw'
+        ):
+            # Transform logits into probabilities
+            return expit(y_score)
+        return y_score
+
     def evaluate_val(
         self,
         y_train: pd.DataFrame,
@@ -432,23 +510,35 @@ class Model:
         :param `eval_metric`: (str) Metric utilized to define the self.test_score attribute.
         :param `debug`: (bool) Wether or not to show self.test_score, for debugging purposes.
         """
+        # Prepare y_test
+        y_test = y_test.values.astype(int)
+
         # Predict test values
-        test_preds = self.model.predict(X_test.values)
+        y_pred = self.predict(X=X_test)
+
+        # Predict probability
+        y_score = self.predict_proba(X=X_test)
 
         # Evaluate F1 Score
-        self.f1_score = f1_score(y_test.values.astype(int), test_preds)
+        self.f1_score = f1_score(y_test, y_pred)
 
         # Evaluate Precision Score
-        self.precision_score = precision_score(y_test.values.astype(int), test_preds)
+        self.precision_score = precision_score(y_test, y_pred)
 
         # Evaluate Recall Score
-        self.recall_score = recall_score(y_test.values.astype(int), test_preds)
+        self.recall_score = recall_score(y_test, y_pred)
 
         # ROC AUC Score
-        self.roc_auc_score = roc_auc_score(y_test.values.astype(int), test_preds)
+        self.roc_auc_score = roc_auc_score(y_test, y_score)
 
         # Accuracy Score
-        self.accuracy_score = accuracy_score(y_test.values.astype(int), test_preds)
+        self.accuracy_score = accuracy_score(y_test, y_pred)
+
+        # Confusion Matrix
+        self.confusion_matrix = confusion_matrix(y_test, y_pred)
+
+        # ROC Curve
+        self.fpr, self.tpr, self.thresholds = roc_curve(y_test, y_score)
 
         # Define test score
         if eval_metric == 'f1_score':
@@ -467,31 +557,39 @@ class Model:
         if debug:
             print(f'self.test_score ({eval_metric}): {self.test_score}\n')
 
-    def predict(
+    def optimize_cutoff(
         self,
-        X: pd.DataFrame
-    ) -> np.ndarray:
+        y_test: pd.DataFrame,
+        X_test: pd.DataFrame,
+    ) -> None:
         """
-        Method for realizing new category inferences.
+        Method that will iteratively loop over different cutoff configurations in order to find the most 
+        optimal one.
 
-        :param `X`: (pd.DataFrame) New features to make inferences on.
-
-        :return: (np.ndarray) New category inferences.
+        :param `y_test`: (pd.DataFrame) Binary & un-balanced test target.
+        :param `X_test`: (pd.DataFrame) Test features.
         """
-        return self.model.predict(X.values.astype(float))
-    
-    def predict_proba(
-        self,
-        X: pd.DataFrame
-    ) -> np.ndarray:
-        """
-        Method for realizing new probabilistic inferences.
+        # Define performances
+        performances = {}
+        
+        # Loop through different cutoffs  
+        for cutoff in np.arange(0.3, 0.61, 0.01):
+            # Find new predictions (dependant on the cutoff)
+            y_pred = self.predict(X=X_test, cutoff=cutoff)
 
-        :param `X`: (pd.DataFrame) New features to make inferences on.
+            # Calculate F1 Score
+            score = f1_score(y_test, y_pred)
 
-        :return: (np.ndarray) New probabilistic inferences.
-        """
-        return self.model.predict_proba(X.values.astype(float))
+            # Assign performances
+            performances[cutoff] = score
+        
+        # Find optimal cutoff
+        optimal_cutoff, optimal_f1_score = max(performances.items(), key=lambda x: x[1])
+
+        # Assign cutoff
+        self.cutoff = optimal_cutoff
+
+        print(f'Optimal cutoff for {self.model_id}: {round(self.cutoff, 3)} (F1 Score {optimal_f1_score}).\n')
 
     def find_feature_importance(
         self,
@@ -510,6 +608,12 @@ class Model:
         try:
             if find_new_shap_values or self.shap_values is None:
                 print(f'Calculating new shaply values for {self.model_id}.\n\n')
+                # Fits the explainer
+                # explainer = shap.Explainer(self.model.predict_proba, X_test)
+
+                # Calculates the SHAP values
+                # self.shap_values: np.ndarray = explainer(X_test)
+
                 # Instanciate explainer
                 explainer = shap.TreeExplainer(self.model)
 
@@ -527,9 +631,9 @@ class Model:
 
             self.importance_method = 'shap'
         except Exception as e:
-            print(f'[WARNING] Unable to calculate shap feature importance on {self.model_id} ({self.algorithm}).\n'
-                  f'Exception: {e}\n'
-                  f'Re-trying with a native approach.\n\n')
+            # print(f'[WARNING] Unable to calculate shap feature importance on {self.model_id} ({self.algorithm}).\n'
+            #       f'Exception: {e}\n'
+            #       f'Re-trying with a native approach.\n\n')
             
             # Define DataFrame to describe importances on (utilizing native feature importance calculation method)
             importance_df = pd.DataFrame({
@@ -826,7 +930,8 @@ class Model:
             'Algorithm': self.algorithm,
             'Hyper Parameters': self.hyper_parameters,
             'Test Score': self.test_score,
-            'Validation Score': self.val_score 
+            'Validation Score': self.val_score,
+            'Cutoff': self.cutoff
         })
         print('\n\n')
 

@@ -1,0 +1,14 @@
+aliases: []
+creation_timestamp: 1703260328525
+current_stage: Staging
+description: null
+last_updated_timestamp: 1703260328533
+name: jWOTvKefir_lightgbm_model
+run_id: 9dabde679f5e45ababfdc6947ae33506
+run_link: null
+source: file:///Users/simongarciamorillo/Library/CloudStorage/OneDrive-Personal/Documents/EdMachina/challenge/mlruns/176063670909512656/9dabde679f5e45ababfdc6947ae33506/artifacts/jWOTvKefir_lightgbm_model
+status: READY
+status_message: null
+storage_location: file:///Users/simongarciamorillo/Library/CloudStorage/OneDrive-Personal/Documents/EdMachina/challenge/mlruns/176063670909512656/9dabde679f5e45ababfdc6947ae33506/artifacts/jWOTvKefir_lightgbm_model
+user_id: null
+version: 1

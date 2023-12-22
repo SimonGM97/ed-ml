@@ -1,0 +1,15 @@
+artifact_uri: file:///Users/simongarciamorillo/Library/CloudStorage/OneDrive-Personal/Documents/EdMachina/challenge/mlruns/176063670909512656/250c76798fee4cf991e72c11c576121d/artifacts
+end_time: 1703260324258
+entry_point_name: ''
+experiment_id: '176063670909512656'
+lifecycle_stage: active
+run_id: 250c76798fee4cf991e72c11c576121d
+run_name: luminous-tern-392
+run_uuid: 250c76798fee4cf991e72c11c576121d
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1703206040369
+status: 3
+tags: []
+user_id: simongarciamorillo

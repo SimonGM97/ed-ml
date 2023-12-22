@@ -1,0 +1,14 @@
+aliases: []
+creation_timestamp: 1703260325662
+current_stage: Staging
+description: null
+last_updated_timestamp: 1703260325670
+name: KQJGCNIDiu_xgboost_model
+run_id: 0a0b73a80f904e7a9900e2078b7c754c
+run_link: null
+source: file:///Users/simongarciamorillo/Library/CloudStorage/OneDrive-Personal/Documents/EdMachina/challenge/mlruns/176063670909512656/0a0b73a80f904e7a9900e2078b7c754c/artifacts/KQJGCNIDiu_xgboost_model
+status: READY
+status_message: null
+storage_location: file:///Users/simongarciamorillo/Library/CloudStorage/OneDrive-Personal/Documents/EdMachina/challenge/mlruns/176063670909512656/0a0b73a80f904e7a9900e2078b7c754c/artifacts/KQJGCNIDiu_xgboost_model
+user_id: null
+version: 1

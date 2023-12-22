@@ -1,0 +1,14 @@
+aliases: []
+creation_timestamp: 1703207717097
+current_stage: Staging
+description: null
+last_updated_timestamp: 1703207717104
+name: buECwXhTdY_lightgbm_model
+run_id: f270caa8fbaa455ebe05c8ef6142fcdc
+run_link: null
+source: file:///Users/simongarciamorillo/Library/CloudStorage/OneDrive-Personal/Documents/EdMachina/challenge/mlruns/176063670909512656/f270caa8fbaa455ebe05c8ef6142fcdc/artifacts/buECwXhTdY_lightgbm_model
+status: READY
+status_message: null
+storage_location: file:///Users/simongarciamorillo/Library/CloudStorage/OneDrive-Personal/Documents/EdMachina/challenge/mlruns/176063670909512656/f270caa8fbaa455ebe05c8ef6142fcdc/artifacts/buECwXhTdY_lightgbm_model
+user_id: null
+version: 1

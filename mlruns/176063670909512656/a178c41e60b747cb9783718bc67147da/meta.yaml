@@ -1,0 +1,15 @@
+artifact_uri: file:///Users/simongarciamorillo/Library/CloudStorage/OneDrive-Personal/Documents/EdMachina/challenge/mlruns/176063670909512656/a178c41e60b747cb9783718bc67147da/artifacts
+end_time: 1703260318706
+entry_point_name: ''
+experiment_id: '176063670909512656'
+lifecycle_stage: active
+run_id: a178c41e60b747cb9783718bc67147da
+run_name: flawless-bee-516
+run_uuid: a178c41e60b747cb9783718bc67147da
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1703081344315
+status: 3
+tags: []
+user_id: simongarciamorillo

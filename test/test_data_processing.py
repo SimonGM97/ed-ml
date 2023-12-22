@@ -12,6 +12,9 @@ import os
 class TestDataProcessing(TestCase):
 
     def test__data_processor__success_raw_data_transformed_as_expected(self):
+        """
+        Testing method that will validate that a mocked raw dataset is transformed as expected.
+        """
         # Load mock input data
         mock_input_path = os.path.join(
             'data_lake', 'datasets', 'mock_data', 'data_processing_input.csv'

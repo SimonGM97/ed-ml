@@ -1,0 +1,15 @@
+artifact_uri: file:///Users/simongarciamorillo/Library/CloudStorage/OneDrive-Personal/Documents/EdMachina/challenge/mlruns/176063670909512656/0a0b73a80f904e7a9900e2078b7c754c/artifacts
+end_time: 1703260325648
+entry_point_name: ''
+experiment_id: '176063670909512656'
+lifecycle_stage: active
+run_id: 0a0b73a80f904e7a9900e2078b7c754c
+run_name: indecisive-midge-239
+run_uuid: 0a0b73a80f904e7a9900e2078b7c754c
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1703206405811
+status: 3
+tags: []
+user_id: simongarciamorillo

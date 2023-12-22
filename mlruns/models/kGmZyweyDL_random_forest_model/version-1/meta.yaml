@@ -1,0 +1,14 @@
+aliases: []
+creation_timestamp: 1703260318724
+current_stage: Staging
+description: null
+last_updated_timestamp: 1703260318733
+name: kGmZyweyDL_random_forest_model
+run_id: a178c41e60b747cb9783718bc67147da
+run_link: null
+source: file:///Users/simongarciamorillo/Library/CloudStorage/OneDrive-Personal/Documents/EdMachina/challenge/mlruns/176063670909512656/a178c41e60b747cb9783718bc67147da/artifacts/kGmZyweyDL_random_forest_model
+status: READY
+status_message: null
+storage_location: file:///Users/simongarciamorillo/Library/CloudStorage/OneDrive-Personal/Documents/EdMachina/challenge/mlruns/176063670909512656/a178c41e60b747cb9783718bc67147da/artifacts/kGmZyweyDL_random_forest_model
+user_id: null
+version: 1

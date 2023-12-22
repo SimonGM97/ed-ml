@@ -1,0 +1,15 @@
+artifact_uri: file:///Users/simongarciamorillo/Library/CloudStorage/OneDrive-Personal/Documents/EdMachina/challenge/mlruns/176063670909512656/f270caa8fbaa455ebe05c8ef6142fcdc/artifacts
+end_time: 1703260314331
+entry_point_name: ''
+experiment_id: '176063670909512656'
+lifecycle_stage: active
+run_id: f270caa8fbaa455ebe05c8ef6142fcdc
+run_name: salty-auk-784
+run_uuid: f270caa8fbaa455ebe05c8ef6142fcdc
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1703079824047
+status: 3
+tags: []
+user_id: simongarciamorillo

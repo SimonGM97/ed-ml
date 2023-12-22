@@ -19,3 +19,6 @@
 
 # Data
 data_lake/
+
+# Archive
+.archive/

@@ -1,0 +1,16 @@
+artifact_uri: file:///Users/simongarciamorillo/Library/CloudStorage/OneDrive-Personal/Documents/EdMachina/challenge/mlruns/176063670909512656/a2cabe9f0087467dbb3906a243bb23c7/artifacts
+deleted_time: 1703206407612
+end_time: 1703205487609
+entry_point_name: ''
+experiment_id: '176063670909512656'
+lifecycle_stage: deleted
+run_id: a2cabe9f0087467dbb3906a243bb23c7
+run_name: orderly-dolphin-617
+run_uuid: a2cabe9f0087467dbb3906a243bb23c7
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1703202114937
+status: 3
+tags: []
+user_id: simongarciamorillo

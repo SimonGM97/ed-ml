@@ -1,5 +1,6 @@
 from config.params import Params
 from ed_ml.data_processing.data_cleaning import DataCleaner
+from ed_ml.modeling.model_registry import ModelRegistry
 import plotly.graph_objects as go
 import streamlit as st
 import pandas as pd
@@ -11,7 +12,13 @@ warnings.filterwarnings("ignore")
 
 
 @st.cache_data
-def load_raw_data():
+def load_raw_data() -> pd.DataFrame:
+    """
+    Cached function that will load raw_df and leverage the DataCleaner to correct the 
+    "periodo" column.
+
+    :return: (pd.DataFrame) Raw DataFrame
+    """
     # Load raw data    
     df = pd.read_csv(Params.raw_data_path, sep=';')
 
@@ -25,14 +32,42 @@ def load_raw_data():
 
 
 @st.cache_data
-def filter_df(df: pd.DataFrame, course_name: str, periodo: str):
-    return df.loc[
-        (df['course_name'] == course_name) &
-        (df['periodo'] == periodo)
-    ]
+def filter_df(
+    df: pd.DataFrame, 
+    course_name: str = None, 
+    periodo: str = None
+):
+    """
+    Cached function that will filter the input DataFrame, based on the course and and or periodo.
+
+    :param `course_name`: (str) Course name to keep.
+    :param `periodo`: (str) Periods to keep.
+
+    :returns: (pd.DataFrame) Filtered DataFrame.
+    """
+    # Filter by course_name
+    if course_name is not None:
+        df = df.loc[df['course_name'] == course_name]
+
+    # Filter by periodo
+    if periodo is not None:
+        df = df.loc[df['periodo'] == periodo]
+
+    # Return filtered df
+    return df
 
 
-def run_new_prediction(raw_df: pd.DataFrame):
+@st.cache_data
+def generate_new_prediction(
+    raw_df: pd.DataFrame
+) -> pd. DataFrame:
+    """
+    Function that will ping the flask endpoint to generate new inferences for the specified raw_df.
+
+    :param `raw_df`: (pd.DataFrame) Raw DataFrame with new observations to generate inferences on.
+
+    :return: (pd.DataFrame) New inferences.
+    """
     def first(col: pd.Series):
         return col.values[0]
     
@@ -45,20 +80,24 @@ def run_new_prediction(raw_df: pd.DataFrame):
     # Create predictions DataFrame
     predictions_df = (
         pd.DataFrame(predictions)
-        .rename(columns={'predicted_probability': 'Passing Probability [%]'})
-        .sort_values(by=['Passing Probability [%]'], ascending=False)
+        .rename(columns={'predicted_probability': 'Failing Probability [%]'})
+        .sort_values(by=['Failing Probability [%]'], ascending=False)
         # .reset_index(drop=True)
     )
 
-    # Round passing probability
-    predictions_df['Passing Probability [%]'] = np.round(
-        100 *  predictions_df['Passing Probability [%]'], 1
+    # Round failing probability
+    predictions_df['Failing Probability [%]'] = np.round(
+        100 *  predictions_df['Failing Probability [%]'], 1
     )
+
+    # Find Cutoff
+    registry = ModelRegistry(load_from_local_registry=True)
+    cutoff = registry.prod_model.cutoff
 
     # Find prediction class
     predictions_df['Predicted class'] = np.where(
-        predictions_df['Passing Probability [%]'] >= 50.0,
-        'Pass', 'Not Pass'
+        predictions_df['Failing Probability [%]'] >= cutoff * 100,
+        'Fail', 'Pass'
     )
 
     # Define index name
@@ -67,7 +106,7 @@ def run_new_prediction(raw_df: pd.DataFrame):
     # Prepare additional information
     DC = DataCleaner(df=raw_df)
 
-    cleaned_df = DC.cleaner_pipeline()
+    cleaned_df = DC.run_cleaner_pipeline()
 
     append_df = (
         cleaned_df
@@ -91,13 +130,23 @@ def run_new_prediction(raw_df: pd.DataFrame):
     predictions_df = pd.concat([predictions_df, append_df], axis=1)
 
     # Remove null predictions
-    predictions_df = predictions_df.loc[predictions_df['Passing Probability [%]'].notna()]
+    predictions_df = predictions_df.loc[predictions_df['Failing Probability [%]'].notna()]
 
     return predictions_df
 
 
-def find_donut_chart(predictions_df: pd.DataFrame):
-    vals = ['Pass', 'Not Pass']
+def find_donut_chart(
+    predictions_df: pd.DataFrame
+):
+    """
+    Function that will build the plotly figure of the donut chart containing counts of "Passes" &
+    "Fail" students.
+
+    :param `predictions_df`: (pd.DataFrame) Inferences outputted by the run_new_predictions function.
+
+    :return: (go.Figure) Plotly donut chart figure.
+    """
+    vals = ['Pass', 'Fail']
     counts = predictions_df['Predicted class'].value_counts()
     tot = counts.sum()
     for v in vals:
@@ -107,10 +156,10 @@ def find_donut_chart(predictions_df: pd.DataFrame):
         counts.loc[v] = 100 * counts.loc[v] / tot
 
     fig = go.Figure(go.Pie(
-        labels=["Pass", "Not Pass"],
+        labels=["Pass", "Fail"],
         values=[
             counts.loc['Pass'],
-            counts.loc['Not Pass']
+            counts.loc['Fail']
         ], 
         marker=dict(
             colors=['#62A64E', '#A64E4E'] # '#C60000', '#21C600', '#62A64E', '#A64E4E'
@@ -133,7 +182,16 @@ def find_donut_chart(predictions_df: pd.DataFrame):
     return fig
 
 
-def show_results(predictions_df: pd.DataFrame):
+def show_results(
+    predictions_df: pd.DataFrame
+) -> None:
+    """
+    Function that will:
+        - Create a donut chart with the counts of students predicted as "Pass" and "Fail".
+        - Create a DataFrame table with the individual predictions for each specified students.
+    
+    :param `predictions_df`: (pd.DataFrame) Inferences outputted by the run_new_predictions function.
+    """
     # Define row
     row0, row1, row2, row3 = st.columns([0.25, 1.5, 4, 1])
 
@@ -152,7 +210,7 @@ def show_results(predictions_df: pd.DataFrame):
     # Configure Prediction & Predicted Category column
     ordered_cols = [
         'Legajo', 'Course Name', 'Average Parcial', 
-        'Average Activity', 'Predicted class', 'Passing Probability [%]'
+        'Average Activity', 'Predicted class', 'Failing Probability [%]'
     ]
 
     # predictions_df['Predicted class'] = predictions_df['Predicted class'].apply(
@@ -162,7 +220,7 @@ def show_results(predictions_df: pd.DataFrame):
 
     def highlight_row(row):
         color = 'background-color: white'
-        if row['Predicted class'] == 'Not Pass':
+        if row['Predicted class'] == 'Fail':
             color = 'background-color: #F6B0B0'
         return [color] * len(row)
 
@@ -171,9 +229,9 @@ def show_results(predictions_df: pd.DataFrame):
     row2.data_editor(
         styled_df, 
         column_config={
-            "Passing Probability [%]": st.column_config.ProgressColumn(
-                "Passing Probability [%]",
-                help="Predicted probability of passing the course.",
+            "Failing Probability [%]": st.column_config.ProgressColumn(
+                "Failing Probability [%]",
+                help="Predicted probability of failing the course.",
                 format="%.1f%%",
                 min_value=0,
                 max_value=100,
@@ -185,7 +243,19 @@ def show_results(predictions_df: pd.DataFrame):
     )
 
 
-def find_options(df: pd.DataFrame, col_name: str):
+def find_options(
+    df: pd.DataFrame, 
+    col_name: str
+) -> list:
+    """
+    Function that will find the unique values in a specific column; returning the results in a 
+    sorted list.
+
+    :param `df`: (pd.DataFrame) DataFrame to find options from.
+    :param `col_name`: (list) Column name where the options are to be found.
+
+    :return: (list) List of unique options, sorted by the amount of observations.
+    """
     return (
         df
         .groupby(col_name)
@@ -197,7 +267,11 @@ def find_options(df: pd.DataFrame, col_name: str):
     )
 
 
-def build_inference_page():
+def build_inference_page() -> None:
+    """
+    Function that will build and render the Inference page for the user to make new inferences on specific
+    courses, stundents and partitions.
+    """
     # Load cleaned dataset from cache
     raw_df = load_raw_data()
 
@@ -228,12 +302,14 @@ def build_inference_page():
         unsafe_allow_html=True
     )
 
-    # Select user_uuid
+    # Select course_name
     course_names = find_options(df=raw_df, col_name='course_name')
     course_name = row21.selectbox(
         label='course_name_selection', 
         options=course_names,
-        label_visibility='collapsed'
+        label_visibility='collapsed',
+        placeholder='Select a course',
+        index=None
     )
 
     # Select periodo
@@ -241,7 +317,9 @@ def build_inference_page():
     periodo = row23.selectbox(
         label='period_selection', 
         options=periodos, 
-        label_visibility='collapsed'
+        label_visibility='collapsed',
+        placeholder='Select a period (Optional)',
+        index=None
     )
 
     # Write a line
@@ -294,8 +372,8 @@ def build_inference_page():
     # Run Inference Pipeline
     if run_inference:
         # Find predictions_df
-        predictions_df = run_new_prediction(raw_df=raw_df)
-
+        predictions_df = generate_new_prediction(raw_df=raw_df)
+        
         # Show DataFrame
         show_results(predictions_df)
 

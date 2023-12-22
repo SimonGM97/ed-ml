@@ -1,0 +1,15 @@
+artifact_uri: file:///Users/simongarciamorillo/Library/CloudStorage/OneDrive-Personal/Documents/EdMachina/challenge/mlruns/176063670909512656/ecae46a9b24b44e6b878ad130164be32/artifacts
+end_time: 1703260311659
+entry_point_name: ''
+experiment_id: '176063670909512656'
+lifecycle_stage: active
+run_id: ecae46a9b24b44e6b878ad130164be32
+run_name: bouncy-loon-447
+run_uuid: ecae46a9b24b44e6b878ad130164be32
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1703194556219
+status: 3
+tags: []
+user_id: simongarciamorillo

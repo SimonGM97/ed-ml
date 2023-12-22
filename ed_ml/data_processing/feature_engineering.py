@@ -1,4 +1,5 @@
 from config.params import Params
+from ed_ml.utils.timing import timing
 import pandas as pd
 import numpy as np
 import warnings
@@ -11,8 +12,8 @@ pd.set_option('display.max_columns', None)
 
 class FeatureEngineer:
     """
-    Class used to perform feature engineering processes & transformations required
-    to generate ML datasets that will later be consumed by ML models.
+    Class used to perform feature engineering processes & transformations required to generate ML 
+    datasets that will later be consumed by ML models.
     """
 
     def __init__(
@@ -38,8 +39,10 @@ class FeatureEngineer:
         df: pd.DataFrame
     ) -> pd.DataFrame:
         """
-        Method that will produce the target variable by assigning a 1 if the final grade is greater or equal to 4,
-        and a 0 if that is not the case.
+        Method that will produce the target variable by assigning a 0 if the final grade is greater 
+        to or equal to 4, and a 1 if that is not the case.
+            - Note that, assigning a 1 to the smaller class is best practice on unbalanced classification
+              problems.
 
         :param `df`: (pd.DataFrame) DataFrame without target column.
 
@@ -47,7 +50,9 @@ class FeatureEngineer:
         """
         # Define target column
         df[Params.target_column] = np.where(
-            df['nota_final_materia'] >= 4, 1, 0
+            df['nota_final_materia'] >= 4, 
+            0, # If true 
+            1 # If False
         )
 
         return df
@@ -359,7 +364,7 @@ class FeatureEngineer:
         df: pd.DataFrame
     ) -> pd.DataFrame:
         """
-        Method that will remove partitions until the first exam was taken or assignment was submitted.
+        Method that will remove partitions until the first exam was taken and the first assignment was submitted.
         The reason for removing observations until this point is so that ML models will have at least some 
         useful information to make inferences & understand patterns.
 
@@ -381,6 +386,7 @@ class FeatureEngineer:
 
         return df
 
+    @timing
     def run_feature_engineering_pipeline(
         self,
         save: bool = False

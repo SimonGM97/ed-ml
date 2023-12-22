@@ -1,7 +1,7 @@
 from config.params import Params
+from ed_ml.utils.timing import timing
 import pandas as pd
 import numpy as np
-import os
 
 
 class DataCleaner:
@@ -241,6 +241,7 @@ class DataCleaner:
 
         return df
     
+    @timing
     def run_cleaner_pipeline(
         self,
         save: bool = False

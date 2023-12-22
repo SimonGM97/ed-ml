@@ -11,6 +11,9 @@ import pandas as pd
 import json
 import os
 from pprint import pprint
+import warnings
+
+warnings.filterwarnings("ignore", category=pd.errors.PerformanceWarning)
 
 
 class TestMLPipeline(TestCase):
@@ -19,6 +22,12 @@ class TestMLPipeline(TestCase):
         self,
         debug: bool = False
     ):
+        """
+        Testing method that will verify that:
+            - Train datasets created by the MLPipeline are balanced (i.e.: has approximately 50% observations of 
+              each group).
+            - Test datasets contain the same unbalanced group distribution as the overall (train & test) datasets.
+        """
         # Load mock input data
         mock_input_path = os.path.join(
             'data_lake', 'datasets', 'ml_data', 'ml_data.csv'
@@ -32,6 +41,8 @@ class TestMLPipeline(TestCase):
         pipeline.prepare_datasets(
             ml_df=ml_df,
             train_test_ratio=Params.train_test_ratio,
+            balance_train=Params.balance_train,
+            balance_method=Params.balance_method,
             debug=False
         )
 
@@ -82,6 +93,10 @@ class TestMLPipeline(TestCase):
         self,
         debug: bool = False
     ):
+        """
+        Method that will validate that new inferences being made to a mocked raw df are consistent with 
+        the expected inference.
+        """
         # Load mock input data
         mock_input_path = os.path.join(
             'data_lake', 'datasets', 'mock_data', 'data_processing_input.csv'
@@ -113,9 +128,6 @@ class TestMLPipeline(TestCase):
         mock_output_path = os.path.join(
             'data_lake', 'datasets', 'mock_data', 'expected_inference.json'
         )
-
-        # with open(mock_output_path, "w") as f:
-        #     json.dump(prediction, f, indent=4)
 
         expected_prediction = json.load(open(mock_output_path))
 

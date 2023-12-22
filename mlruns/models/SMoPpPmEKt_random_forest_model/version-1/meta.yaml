@@ -1,0 +1,14 @@
+aliases: []
+creation_timestamp: 1703260317289
+current_stage: Staging
+description: null
+last_updated_timestamp: 1703260317299
+name: SMoPpPmEKt_random_forest_model
+run_id: 98639cae82764407815bb782d1c254c0
+run_link: null
+source: file:///Users/simongarciamorillo/Library/CloudStorage/OneDrive-Personal/Documents/EdMachina/challenge/mlruns/176063670909512656/98639cae82764407815bb782d1c254c0/artifacts/SMoPpPmEKt_random_forest_model
+status: READY
+status_message: null
+storage_location: file:///Users/simongarciamorillo/Library/CloudStorage/OneDrive-Personal/Documents/EdMachina/challenge/mlruns/176063670909512656/98639cae82764407815bb782d1c254c0/artifacts/SMoPpPmEKt_random_forest_model
+user_id: null
+version: 1

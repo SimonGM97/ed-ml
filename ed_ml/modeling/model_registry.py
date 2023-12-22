@@ -115,7 +115,7 @@ class ModelRegistry:
         """
         # Load Dev Models
         dev_models: List[Model] = self.load_models(
-            model_ids=self.local_registry['development'],
+            model_ids=list(set(self.local_registry['development'])),
             stage='development'
         )
 
@@ -133,7 +133,7 @@ class ModelRegistry:
         """
         # Load Staging Models
         stage_models: List[Model] = self.load_models(
-            model_ids=self.local_registry['staging'],
+            model_ids=list(set(self.local_registry['staging'])),
             stage='staging'
         )
 
@@ -302,11 +302,8 @@ class ModelRegistry:
             # Assert model stage
             assert model.stage == 'development'
 
-            # Save model to file system
-            model.save_to_file_system()
-
-            # Log model to tracking server
-            model.log_model()
+            # Save model
+            model.save()
 
         # Save Staging Models
         self.local_registry['staging'] = [m.model_id for m in staging_models]
@@ -314,11 +311,8 @@ class ModelRegistry:
             # Assert model stage
             assert model.stage == 'staging'
 
-            # Save model to file system
-            model.save_to_file_system()
-
-            # Register model
-            model.register_model()
+            # Save model
+            model.save()
 
         # Save Champion
         self.local_registry['production'] = [champion.model_id]

@@ -1,0 +1,14 @@
+aliases: []
+creation_timestamp: 1703260315800
+current_stage: Staging
+description: null
+last_updated_timestamp: 1703260315808
+name: xxQgqAKdKO_random_forest_model
+run_id: c80afddcabff488d86d4046515752113
+run_link: null
+source: file:///Users/simongarciamorillo/Library/CloudStorage/OneDrive-Personal/Documents/EdMachina/challenge/mlruns/176063670909512656/c80afddcabff488d86d4046515752113/artifacts/xxQgqAKdKO_random_forest_model
+status: READY
+status_message: null
+storage_location: file:///Users/simongarciamorillo/Library/CloudStorage/OneDrive-Personal/Documents/EdMachina/challenge/mlruns/176063670909512656/c80afddcabff488d86d4046515752113/artifacts/xxQgqAKdKO_random_forest_model
+user_id: null
+version: 1

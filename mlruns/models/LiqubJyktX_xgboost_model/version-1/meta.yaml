@@ -1,0 +1,14 @@
+aliases: []
+creation_timestamp: 1703260322861
+current_stage: Staging
+description: null
+last_updated_timestamp: 1703260322869
+name: LiqubJyktX_xgboost_model
+run_id: d1ec4aa8b81243f89993c8fa12cbee63
+run_link: null
+source: file:///Users/simongarciamorillo/Library/CloudStorage/OneDrive-Personal/Documents/EdMachina/challenge/mlruns/176063670909512656/d1ec4aa8b81243f89993c8fa12cbee63/artifacts/LiqubJyktX_xgboost_model
+status: READY
+status_message: null
+storage_location: file:///Users/simongarciamorillo/Library/CloudStorage/OneDrive-Personal/Documents/EdMachina/challenge/mlruns/176063670909512656/d1ec4aa8b81243f89993c8fa12cbee63/artifacts/LiqubJyktX_xgboost_model
+user_id: null
+version: 1

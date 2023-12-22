@@ -1,1 +1,11 @@
-Currently no rights reserved.
+Proprietary License.
+
+This software is proprietary and confidential. The author and copyright holder of this software is Simón Pedro García Morillo.
+
+Permission is hereby granted to use and review the source code solely for the purpose of understanding its implementation. Any other use, reproduction, distribution, or modification of this software, in whole or in part, without the explicit written consent of Simón Pedro García Morillo, is strictly prohibited.
+
+No license, whether express or implied, is granted for any other purpose or to any other person.
+
+For inquiries regarding licensing or use of this software, please contact simongmorillo1@gmail.com.
+
+© 2023 Simón Pedro García Morillo

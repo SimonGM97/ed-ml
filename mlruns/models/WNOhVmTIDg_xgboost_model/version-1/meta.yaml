@@ -1,0 +1,14 @@
+aliases: []
+creation_timestamp: 1703260329895
+current_stage: Production
+description: null
+last_updated_timestamp: 1703260329901
+name: WNOhVmTIDg_xgboost_model
+run_id: 95ad0edff4794836a730bf8dd646a954
+run_link: null
+source: file:///Users/simongarciamorillo/Library/CloudStorage/OneDrive-Personal/Documents/EdMachina/challenge/mlruns/176063670909512656/95ad0edff4794836a730bf8dd646a954/artifacts/WNOhVmTIDg_xgboost_model
+status: READY
+status_message: null
+storage_location: file:///Users/simongarciamorillo/Library/CloudStorage/OneDrive-Personal/Documents/EdMachina/challenge/mlruns/176063670909512656/95ad0edff4794836a730bf8dd646a954/artifacts/WNOhVmTIDg_xgboost_model
+user_id: null
+version: 1
